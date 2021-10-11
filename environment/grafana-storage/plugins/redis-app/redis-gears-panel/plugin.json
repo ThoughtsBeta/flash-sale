@@ -1,0 +1,16 @@
+{
+  "id": "redis-gears-panel",
+  "info": {
+    "author": {
+      "name": "RedisGrafana",
+      "url": "https://redisgrafana.github.io"
+    },
+    "description": "RedisGears panel",
+    "logos": {
+      "large": "img/logo.svg",
+      "small": "img/logo.svg"
+    }
+  },
+  "name": "RedisGears",
+  "type": "panel"
+}

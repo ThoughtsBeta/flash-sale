@@ -1,0 +1,16 @@
+{
+  "id": "redis-keys-panel",
+  "info": {
+    "author": {
+      "name": "RedisGrafana",
+      "url": "https://redisgrafana.github.io"
+    },
+    "description": "Redis Max Memory Keys panel",
+    "logos": {
+      "large": "img/logo.svg",
+      "small": "img/logo.svg"
+    }
+  },
+  "name": "Redis Max Memory Keys",
+  "type": "panel"
+}

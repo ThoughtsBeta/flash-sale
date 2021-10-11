@@ -1,0 +1,105 @@
+{
+  "alerting": true,
+  "id": "redis-enterprise-software-datasource",
+  "info": {
+    "author": {
+      "name": "RedisGrafana",
+      "url": "https://redisgrafana.github.io/"
+    },
+    "description": "Redis Enterprise Software",
+    "logos": {
+      "large": "img/logo.svg",
+      "small": "img/logo.svg"
+    }
+  },
+  "logs": true,
+  "metrics": true,
+  "name": "Redis Enterprise Software",
+  "routes": [
+    {
+      "method": "GET",
+      "path": "cluster",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/cluster"
+    },
+    {
+      "method": "GET",
+      "path": "cluster/stats",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/cluster/stats"
+    },
+    {
+      "method": "GET",
+      "path": "license",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/license"
+    },
+    {
+      "method": "GET",
+      "path": "nodes",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/nodes"
+    },
+    {
+      "method": "GET",
+      "path": "nodes/alerts",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/nodes/alerts"
+    },
+    {
+      "method": "GET",
+      "path": "nodes/stats",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/nodes/stats"
+    },
+    {
+      "method": "GET",
+      "path": "bdbs",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/bdbs"
+    },
+    {
+      "method": "GET",
+      "path": "bdbs/alerts",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/bdbs/alerts"
+    },
+    {
+      "method": "GET",
+      "path": "bdbs/stats",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/bdbs/stats"
+    },
+    {
+      "method": "GET",
+      "path": "modules",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/modules"
+    },
+    {
+      "method": "GET",
+      "path": "users",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/users"
+    },
+    {
+      "method": "GET",
+      "path": "logs",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/logs"
+    },
+    {
+      "method": "GET",
+      "path": "bdbs/alerts",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/bdbs/alerts"
+    },
+    {
+      "method": "GET",
+      "path": "nodes/alerts",
+      "reqRole": "Viewer",
+      "url": "{{ .JsonData.host }}/v1/nodes/alerts"
+    }
+  ],
+  "type": "datasource"
+}

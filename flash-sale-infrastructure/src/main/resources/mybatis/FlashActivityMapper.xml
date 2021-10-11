@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.actionworks.flashsale.persistence.mapper.FlashActivityMapper">
+    <sql id="ALL_COLUMNS">
+        id,
+        activity_name,
+        start_time,
+        end_time,
+        activity_desc,
+        status,
+        modified_time,
+        create_time
+    </sql>
+
+    <insert id="insert" parameterType="com.actionworks.flashsale.persistence.model.FlashActivityDO" useGeneratedKeys="true" keyProperty="flashActivityDO.id">
+        INSERT INTO flash_activity(
+        <include refid="ALL_COLUMNS"/>
+        ) VALUES (
+        null,
+        #{activityName,jdbcType=VARCHAR},
+        #{startTime,jdbcType=TIMESTAMP},
+        #{endTime,jdbcType=TIMESTAMP},
+        #{activityDesc,jdbcType=LONGVARCHAR},
+        #{status,jdbcType=INTEGER},
+        now(),
+        now()
+        )
+        <selectKey keyProperty="id" resultType="java.lang.Long" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+
+    <update id="update" parameterType="com.actionworks.flashsale.persistence.model.FlashActivityDO">
+        UPDATE flash_activity SET modified_time = now()
+        <if test="activityName != null">
+            ,`activity_name` = #{activityName,jdbcType=VARCHAR}
+        </if>
+        <if test="startTime != null">
+            ,`start_time` = #{startTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="endTime != null">
+            ,`end_time` = #{endTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="status != null">
+            ,`status` = #{status,jdbcType=INTEGER}
+        </if>
+        <if test="activityDesc != null">
+            ,`activity_desc` = #{activityDesc,jdbcType=LONGVARCHAR}
+        </if>
+
+        where id = #{id}
+    </update>
+
+    <select id="getById" resultType="com.actionworks.flashsale.persistence.model.FlashActivityDO" parameterType="java.lang.Long">
+        SELECT *
+        FROM flash_activity
+        WHERE id = #{activityId}
+    </select>
+
+    <select id="findFlashActivitiesByCondition" resultType="com.actionworks.flashsale.persistence.model.FlashActivityDO">
+        SELECT * FROM flash_activity WHERE 1=1
+        <if test="keyword != null">
+            AND activity_name LIKE concat("%",concat(#{keyword},"%"))
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{offset},#{pageSize}
+    </select>
+
+    <select id="countFlashActivitiesByCondition" resultType="java.lang.Integer">
+        SELECT count(*) FROM flash_activity WHERE 1=1
+        <if test="keyword != null">
+            AND activity_name LIKE concat("%",concat(#{keyword},"%"))
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+    </select>
+
+</mapper>

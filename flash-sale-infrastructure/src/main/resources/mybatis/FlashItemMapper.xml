@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.actionworks.flashsale.persistence.mapper.FlashItemMapper">
+    <sql id="ALL_COLUMNS">
+        id,
+        item_title,
+        item_sub_title,
+        item_desc,
+        initial_stock,
+        available_stock,
+        stock_warm_up,
+        original_price,
+        flash_price,
+        start_time,
+        end_time,
+        rules,
+        status,
+        activity_id,
+        modified_time,
+        create_time
+    </sql>
+
+    <insert id="insert" parameterType="com.actionworks.flashsale.persistence.model.FlashItemDO" useGeneratedKeys="true" keyProperty="flashItemDO.id">
+        INSERT INTO flash_item(
+        <include refid="ALL_COLUMNS"/>
+        ) VALUES (
+        null,
+        #{itemTitle,jdbcType=VARCHAR},
+        #{itemSubTitle,jdbcType=VARCHAR},
+        #{itemDesc,jdbcType=LONGVARCHAR},
+        #{initialStock,jdbcType=INTEGER},
+        #{availableStock,jdbcType=INTEGER},
+        #{stockWarmUp,jdbcType=INTEGER},
+        #{originalPrice,jdbcType=BIGINT},
+        #{flashPrice,jdbcType=BIGINT},
+        #{startTime,jdbcType=TIMESTAMP},
+        #{endTime,jdbcType=TIMESTAMP},
+        #{rules,jdbcType=LONGVARCHAR},
+        #{status,jdbcType=INTEGER},
+        #{activityId,jdbcType=BIGINT},
+        now(),
+        now()
+        )
+        <selectKey keyProperty="id" resultType="java.lang.Long" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+
+    <update id="update" parameterType="com.actionworks.flashsale.persistence.model.FlashItemDO">
+        UPDATE flash_item SET modified_time = now()
+        <if test="itemTitle != null">
+            ,`item_title` = #{itemTitle,jdbcType=VARCHAR}
+        </if>
+        <if test="itemSubTitle != null">
+            ,`item_sub_title` = #{itemSubTitle,jdbcType=VARCHAR}
+        </if>
+        <if test="initialStock != null">
+            ,`initial_stock` = #{initialStock,jdbcType=INTEGER}
+        </if>
+        <if test="availableStock != null">
+            ,`available_stock` = #{availableStock,jdbcType=INTEGER}
+        </if>
+        <if test="stockWarmUp != null">
+            ,`stock_warm_up` = #{stockWarmUp,jdbcType=INTEGER}
+        </if>
+        <if test="originalPrice != null">
+            ,`original_price` = #{originalPrice,jdbcType=BIGINT}
+        </if>
+        <if test="flashPrice != null">
+            ,`flash_price` = #{flashPrice,jdbcType=BIGINT}
+        </if>
+        <if test="startTime != null">
+            ,`start_time` = #{startTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="endTime != null">
+            ,`end_time` = #{endTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="status != null">
+            ,`status` = #{status,jdbcType=INTEGER}
+        </if>
+        <if test="activityId != null">
+            ,`activity_id` = #{activityId,jdbcType=BIGINT}
+        </if>
+        <if test="itemDesc != null">
+            ,`item_desc` = #{itemDesc,jdbcType=LONGVARCHAR}
+        </if>
+        <if test="rules != null">
+            ,`rules` = #{rules,jdbcType=LONGVARCHAR}
+        </if>
+
+        where id = #{id}
+    </update>
+
+    <select id="getById" resultType="com.actionworks.flashsale.persistence.model.FlashItemDO" parameterType="java.lang.Long">
+        SELECT *
+        FROM flash_item
+        WHERE id = #{itemId}
+    </select>
+
+    <select id="findFlashItemsByCondition" resultType="com.actionworks.flashsale.persistence.model.FlashItemDO">
+        SELECT * FROM flash_item WHERE 1=1
+        <if test="keyword != null">
+            AND item_title LIKE concat("%",concat(#{keyword},"%"))
+        </if>
+        <if test="activityId != null">
+            AND activity_id = #{activityId}
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        <if test="stockWarmUp != null">
+            AND stock_warm_up = #{stockWarmUp}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{offset},#{pageSize}
+    </select>
+
+    <select id="countFlashItemsByCondition" resultType="java.lang.Integer">
+        SELECT count(*) FROM flash_item WHERE 1=1
+        <if test="keyword != null">
+            AND item_title LIKE concat("%",concat(#{keyword},"%"))
+        </if>
+        <if test="activityId != null">
+            AND activity_id = #{activityId}
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        <if test="stockWarmUp != null">
+            AND stock_warm_up = #{stockWarmUp}
+        </if>
+    </select>
+    <update id="decreaseItemStock" parameterType="com.actionworks.flashsale.persistence.model.FlashItemDO">
+        UPDATE flash_item
+        SET modified_time   = now(),
+            available_stock = available_stock - #{quantity}
+        where id = #{itemId}
+          and available_stock <![CDATA[ >= ]]> 0
+    </update>
+
+    <update id="increaseItemStock" parameterType="com.actionworks.flashsale.persistence.model.FlashItemDO">
+        UPDATE flash_item
+        SET modified_time   = now(),
+            available_stock = available_stock + #{quantity}
+        where id = #{itemId}
+          and available_stock <![CDATA[ <= ]]> initial_stock
+    </update>
+</mapper>

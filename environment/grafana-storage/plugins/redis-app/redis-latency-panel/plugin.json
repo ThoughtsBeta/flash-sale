@@ -1,0 +1,16 @@
+{
+  "id": "redis-latency-panel",
+  "info": {
+    "author": {
+      "name": "RedisGrafana",
+      "url": "https://redisgrafana.github.io"
+    },
+    "description": "Redis Latency panel",
+    "logos": {
+      "large": "img/logo.svg",
+      "small": "img/logo.svg"
+    }
+  },
+  "name": "Redis Latency",
+  "type": "panel"
+}

@@ -1,0 +1,130 @@
+{
+  "dependencies": {
+    "grafanaDependency": ">=8.0.0",
+    "grafanaVersion": "8.x.x",
+    "plugins": [
+      {
+        "id": "redis-app",
+        "name": "Redis Application plugin",
+        "type": "app",
+        "version": "^2.0.0"
+      }
+    ]
+  },
+  "id": "redis-explorer-app",
+  "includes": [
+    {
+      "addToNav": true,
+      "defaultNav": true,
+      "name": "Home",
+      "icon": "home-alt",
+      "path": "/a/redis-explorer-app/",
+      "role": "Admin",
+      "type": "page"
+    },
+    {
+      "name": "Redis Enterprise Software",
+      "type": "datasource"
+    },
+    {
+      "addToNav": false,
+      "name": "Enterprise Clusters",
+      "path": "dashboards/redis-explorer.json",
+      "role": "Admin",
+      "type": "dashboard"
+    },
+    {
+      "addToNav": false,
+      "name": "Cluster Overview",
+      "path": "dashboards/cluster-overview.json",
+      "role": "Admin",
+      "type": "dashboard"
+    },
+    {
+      "addToNav": false,
+      "name": "Cluster Nodes",
+      "path": "dashboards/cluster-nodes.json",
+      "role": "Admin",
+      "type": "dashboard"
+    },
+    {
+      "addToNav": false,
+      "name": "Cluster Databases",
+      "path": "dashboards/cluster-dbs.json",
+      "role": "Admin",
+      "type": "dashboard"
+    },
+    {
+      "addToNav": true,
+      "name": "Enterprise Clusters",
+      "icon": "apps",
+      "path": "/d/1dKhTjtGk",
+      "role": "Admin",
+      "type": "page"
+    },
+    {
+      "addToNav": true,
+      "name": "Cluster Overview",
+      "icon": "monitor",
+      "path": "/d/viroIzSGz",
+      "role": "Admin",
+      "type": "page"
+    },
+    {
+      "addToNav": true,
+      "name": "Cluster Nodes",
+      "icon": "sitemap",
+      "path": "/d/hqze6rtGz",
+      "role": "Admin",
+      "type": "page"
+    },
+    {
+      "addToNav": true,
+      "name": "Cluster Databases",
+      "icon": "database",
+      "path": "/d/k_A8MjtMk",
+      "role": "Admin",
+      "type": "page"
+    }
+  ],
+  "info": {
+    "author": {
+      "name": "RedisGrafana",
+      "url": "https://redisgrafana.github.io/"
+    },
+    "description": "Redis Explorer",
+    "keywords": ["redis", "plugin"],
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://redisgrafana.github.io/"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/RedisGrafana/grafana-redis-explorer/blob/master/LICENSE"
+      }
+    ],
+    "logos": {
+      "large": "img/logo.svg",
+      "small": "img/logo.svg"
+    },
+    "screenshots": [
+      {
+        "name": "Cluster Overview Dashboard",
+        "path": "img/overview.png"
+      },
+      {
+        "name": "Redis Enterprise Software Data Source",
+        "path": "img/datasource.png"
+      },
+      {
+        "name": "Enable Redis Explorer plugin",
+        "path": "img/enable.png"
+      }
+    ],
+    "updated": "2021-06-24",
+    "version": "2.0.0"
+  },
+  "name": "Redis Explorer",
+  "type": "app"
+}

@@ -1,0 +1,135 @@
+{
+  "dependencies": {
+    "grafanaDependency": ">=8.0.0",
+    "grafanaVersion": "8.x.x",
+    "plugins": [
+      {
+        "id": "redis-datasource",
+        "name": "Redis Data Source",
+        "type": "datasource",
+        "version": "^1.4.0"
+      }
+    ]
+  },
+  "id": "redis-app",
+  "includes": [
+    {
+      "addToNav": true,
+      "defaultNav": true,
+      "name": "Home",
+      "icon": "home-alt",
+      "path": "/a/redis-app/",
+      "role": "Admin",
+      "type": "page"
+    },
+    {
+      "addToNav": false,
+      "name": "Redis Overview",
+      "path": "dashboards/redis-overview.json",
+      "role": "Admin",
+      "type": "dashboard"
+    },
+    {
+      "addToNav": false,
+      "name": "Redis CLI",
+      "path": "dashboards/redis-cli.json",
+      "role": "Admin",
+      "type": "dashboard"
+    },
+    {
+      "addToNav": false,
+      "name": "RedisGears",
+      "path": "dashboards/redis-gears.json",
+      "role": "Admin",
+      "type": "dashboard"
+    },
+    {
+      "addToNav": true,
+      "name": "Redis Overview",
+      "icon": "monitor",
+      "path": "/d/RpSjVqWMz",
+      "role": "Admin",
+      "type": "page"
+    },
+    {
+      "addToNav": true,
+      "name": "Redis CLI",
+      "icon": "calculator-alt",
+      "path": "/d/_SGxCBNGk",
+      "role": "Admin",
+      "type": "page"
+    },
+    {
+      "addToNav": true,
+      "name": "RedisGears",
+      "icon": "cog",
+      "path": "/d/xFPiNzLMz",
+      "role": "Admin",
+      "type": "page"
+    },
+    {
+      "name": "Redis CLI Panel",
+      "type": "panel"
+    },
+    {
+      "name": "Redis Latency Panel",
+      "type": "panel"
+    },
+    {
+      "name": "RedisGears Panel",
+      "type": "panel"
+    }
+  ],
+  "info": {
+    "author": {
+      "name": "RedisGrafana",
+      "url": "https://redisgrafana.github.io"
+    },
+    "description": "Provides Application pages and custom panels for Redis Data Source.",
+    "keywords": ["redis", "timeseries", "plugin"],
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://redisgrafana.github.io"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/RedisGrafana/grafana-redis-app/blob/master/LICENSE"
+      }
+    ],
+    "logos": {
+      "large": "img/logo.svg",
+      "small": "img/logo.svg"
+    },
+    "screenshots": [
+      {
+        "name": "Redis Application",
+        "path": "img/redis-app.png"
+      },
+      {
+        "name": "Redis CLI Dashboard",
+        "path": "img/redis-cli-dashboard.png"
+      },
+      {
+        "name": "RedisGears Dashboard",
+        "path": "img/redis-gears-dashboard.png"
+      },
+      {
+        "name": "Redis CLI Panel",
+        "path": "img/redis-cli-panel.png"
+      },
+      {
+        "name": "Redis Latency Panel",
+        "path": "img/redis-latency-panel-graph.png"
+      },
+      {
+        "name": "Max Memory Keys Panel",
+        "path": "img/redis-keys-panel.png"
+      }
+    ],
+    "updated": "2021-06-25",
+    "version": "2.0.0"
+  },
+  "name": "Redis Application",
+  "type": "app"
+}

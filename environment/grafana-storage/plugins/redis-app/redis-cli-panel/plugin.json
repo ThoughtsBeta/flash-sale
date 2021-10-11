@@ -1,0 +1,16 @@
+{
+  "id": "redis-cli-panel",
+  "info": {
+    "author": {
+      "name": "RedisGrafana",
+      "url": "https://redisgrafana.github.io"
+    },
+    "description": "Redis CLI panel",
+    "logos": {
+      "large": "img/logo.svg",
+      "small": "img/logo.svg"
+    }
+  },
+  "name": "Redis CLI",
+  "type": "panel"
+}

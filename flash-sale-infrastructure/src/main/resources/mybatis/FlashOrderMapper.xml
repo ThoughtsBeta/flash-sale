@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.actionworks.flashsale.persistence.mapper.FlashOrderMapper">
+    <sql id="ALL_COLUMNS">
+        id,
+        item_id,
+        activity_id,
+        item_title,
+        flash_price,
+        quantity,
+        total_amount,
+        status,
+        user_id,
+        modified_time,
+        create_time
+    </sql>
+
+    <insert id="insert" parameterType="com.actionworks.flashsale.persistence.model.FlashOrderDO">
+        INSERT INTO flash_order(
+        <include refid="ALL_COLUMNS"/>
+        ) VALUES (
+        #{id,jdbcType=BIGINT},
+        #{itemId,jdbcType=BIGINT},
+        #{activityId,jdbcType=BIGINT},
+        #{itemTitle,jdbcType=VARCHAR},
+        #{flashPrice,jdbcType=BIGINT},
+        #{quantity,jdbcType=INTEGER},
+        #{totalAmount,jdbcType=BIGINT},
+        #{status,jdbcType=INTEGER},
+        #{userId,jdbcType=BIGINT},
+        now(),
+        now()
+        )
+    </insert>
+
+    <update id="updateStatus" parameterType="com.actionworks.flashsale.persistence.model.FlashOrderDO">
+        UPDATE flash_order SET modified_time = now()
+        <if test="status != null">
+            ,`status` = #{status,jdbcType=INTEGER}
+        </if>
+        where id = #{id}
+    </update>
+
+    <select id="getById" resultType="com.actionworks.flashsale.persistence.model.FlashOrderDO" parameterType="java.lang.Long">
+        SELECT *
+        FROM flash_order
+        WHERE id = #{orderId}
+    </select>
+
+    <select id="findFlashOrdersByCondition" resultType="com.actionworks.flashsale.persistence.model.FlashOrderDO">
+        SELECT * FROM flash_order WHERE 1=1
+        <if test="keyword != null">
+            AND item_name LIKE concat("%",concat(#{keyword},"%"))
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{offset},#{pageSize}
+    </select>
+
+    <select id="countFlashOrdersByCondition" resultType="java.lang.Integer">
+        SELECT count(*) FROM flash_order WHERE 1=1
+        <if test="keyword != null">
+            AND item_name LIKE concat("%",concat(#{keyword},"%"))
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+    </select>
+
+</mapper>
