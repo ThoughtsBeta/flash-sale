@@ -6,45 +6,13 @@ import com.actionworks.flashsale.app.auth.model.Token;
 import com.actionworks.flashsale.controller.exception.AuthException;
 import com.actionworks.flashsale.util.Base64Util;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 import static com.actionworks.flashsale.controller.exception.ErrorCode.INVALID_TOKEN;
 import static com.actionworks.flashsale.controller.exception.ErrorCode.UNAUTHORIZED_ACCESS;
 
 @Service
 public class AuthorizationServiceImpl implements AuthorizationService {
-
-    public static void main(String[] args) throws Exception {
-        FileWriter fw = null;
-        try {
-            //如果文件存在，则追加内容；如果文件不存在，则创建文件
-            File f = new File("/Users/Tao/Downloads/tokens.csv");
-            fw = new FileWriter(f, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        PrintWriter pw = new PrintWriter(fw);
-        pw.println("token");
-        for (long i = 1L; i < 50000L; i++) {
-            String token = Base64Util.encode(JSONObject.toJSONString(new Token().setExpireDate("2021-12-04 17:57:54").setUserId(i)));
-            pw.println(token);
-        }
-        pw.flush();
-        try {
-            fw.flush();
-            pw.close();
-            fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     /**
      * 对token的解析需要结合登录时的令牌加密逻辑；
      */
