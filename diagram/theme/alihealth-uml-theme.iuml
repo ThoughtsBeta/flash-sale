@@ -1,0 +1,143 @@
+@startuml
+
+skinparam shadowing false
+skinparam roundcorner 5
+skinparam BackgroundColor #FFFFFF
+skinparam ArrowColor #000
+skinparam defaultFontName 'Arial Black'
+
+scale 1200 width
+!$BLUE = "#033C73"
+!$INDIGO = "#6610F2"
+!$PURPLE = "#6F42C1"
+!$PINK = "#E83E8C"
+!$RED = "#C71C22"
+!$ORANGE = "#FD7E14"
+!$YELLOW = "#DD5600"
+!$GREEN = "#73A839"
+!$TEAL = "#20C997"
+!$CYAN = "#2FA4E7"
+!$WHITE = "#FFF"
+!$GRAY_DARK = "#343A40"
+!$GRAY = "#868E96"
+!$PRIMARY = "#2FA4E7"
+!$SECONDARY = "#E9ECEF"
+!$SUCCESS = "#73A839"
+!$INFO = "#033C73"
+!$WARNING = "#DD5600"
+!$DANGER = "#C71C22"
+!$LIGHT = "#F8F9FA"
+!$DARK = "#343A40"
+
+'' *_LIGHT = tint (lighter) of the main color of 80%
+''          where TINT is calculated by clr + (255-clr) * tint_factor
+'' *_DARK = shade (darker) of the main color of 80%
+''          and SHADE is calculated by clr * (1 - shade_factor)
+''
+!$FGCOLOR = $DARK
+!$PRIMARY_LIGHT = "#59B6EC"
+!$PRIMARY_DARK = "#2683B9"
+!$PRIMARY_TEXT = $PRIMARY
+!$SECONDARY_LIGHT = "#EDF0F2"
+!$SECONDARY_DARK = "#BABDBF"
+!$SECONDARY_TEXT = $SECONDARY_DARK
+!$INFO_LIGHT = "#35638F"
+!$INFO_TEXT = $INFO
+!$SUCCESS_LIGHT = "#8FB961"
+!$SUCCESS_TEXT = $SUCCESS
+!$WARNING_LIGHT = "#E47833"
+!$WARNING_TEXT = $WARNING
+!$DANGER_LIGHT = "#D2494E"
+!$DANGER_TEXT = $WHITE
+
+skinparam stereotype {
+    CBackgroundColor #4FBE94
+    CBorderColor $SECONDARY_DARK
+    ABackgroundColor #9ADAFA
+    ABorderColor $SUCCESS_DARK
+    IBackgroundColor #FA5B87
+    IBorderColor $DANGER_DARK
+    EBackgroundColor $WARNING_LIGHT
+    EBorderColor $WARNING_DARK
+    NBackgroundColor $INFO_LIGHT
+    NBorderColor $INFO_DARK
+}
+
+skinparam default {
+    FontColor #000
+    FontName Arial Black
+    FontSize 12
+}
+
+skinparam Actor {
+    BackgroundColor #ffffff
+    BorderColor #000
+}
+
+skinparam Node {
+    BackgroundColor #ffffff
+    BorderColor #000
+}
+
+skinparam interface {
+    BackgroundColor #ffffff
+    BorderColor #000
+    HeaderBackgroundColor #ff0000
+    StereotypeFontColor #ff0000
+}
+
+skinparam Usecase {
+    BackgroundColor #ffffff
+    BorderColor #000
+}
+
+skinparam Rectangle {
+    BackgroundColor #ffffff
+    BorderColor #000
+}
+
+skinparam Note {
+    BackgroundColor #50BA90
+    BorderColor #50BA90
+    FontColor #ffffff
+}
+
+skinparam Package {
+    BackgroundColor #EEEBEB
+
+    RoundCorner 2
+    BorderThickness 1
+}
+
+skinparam Queue {
+    BackgroundColor #ffffff
+    BorderColor #000
+}
+
+skinparam Database {
+    BackgroundColor #ffffff
+    BorderColor #000
+}
+
+skinparam Participant {
+    BackgroundColor #ffffff
+    BorderColor #000
+    FontColor #000
+    FontStyle bold
+}
+
+skinparam Sequence {
+    LifeLineBorderColor #000
+    BackgroundColor #F2F2F2
+}
+
+skinparam Class {
+    BackgroundColor #ffffff
+    BorderColor #000
+}
+skinparam title {
+	FontSize	    	         20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+}
+@enduml

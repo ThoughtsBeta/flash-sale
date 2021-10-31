@@ -1,0 +1,39 @@
+@startuml
+!include ../theme/alihealth-uml-theme.iuml
+
+skinparam BoxPadding 15
+skinparam Padding 5
+Package DomainModel <<Frame>> #F2F2F2{
+ class "FlashItem"{
+     秒杀品
+     ..
+     Long activityId:所属活动
+     String itemTitle:秒杀品标题
+     String itemSubTitle:秒杀品副标题
+     String itemDesc:秒杀品介绍
+     Integer initialStock:初始库存
+     Integer availableStock:当前可用库存
+     Long originalPrice:原价
+     Long flashPrice:秒杀价
+     Date startTime:秒杀开始时间
+     Date endTime:秒杀时间
+     Integer status:秒杀品状态
+     Integer stockWarmUp:库存是否已经预热
+  }
+}
+
+Package DomainService <<Frame>> #F2F2F2{
+ interface "FlashItemService"{
+     秒杀品
+     ..
+     void publishFlashItem(FlashItem flashItem):发布新的秒杀品
+     void onlineFlashItem(Long itemId):上线秒杀品
+     void offlineFlashItem(Long itemId):下线秒杀品
+     PageResult<FlashItem> getFlashItems(PagesQueryCondition pagesQueryCondition):获取秒杀品列表
+     FlashItem getFlashItem(Long itemId):根据ID获取指定秒杀品
+     boolean decreaseItemStock(Long itemId, Integer quantity):库存扣减
+     boolean increaseItemStock(Long itemId, Integer quantity);库存恢复
+     boolean isAllowPlaceOrderOrNot(Long itemId):检查秒杀品当前是否允许下单
+  }
+}
+@enduml

@@ -1,0 +1,89 @@
+@startuml
+!include ../theme/alihealth-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+skinparam BackgroundColor #F2F2F2
+
+participant User
+
+participant FlashItemController
+participant FlashItemAPPService
+participant FlashItemCacheService
+participant FlashItemDomainService
+participant DistributedCacheService
+participant DistributedLockFactoryService
+
+User->FlashItemController:根据ID请求秒杀品
+
+activate FlashItemController
+    FlashItemController->FlashItemAPPService:进入应用层
+    activate FlashItemAPPService
+        FlashItemAPPService->FlashItemCacheService:调用秒杀品缓存服务
+        ==缓存核心处理逻辑开始==
+        activate FlashItemCacheService
+        FlashItemCacheService -> FlashItemCacheService:获取本地缓存
+        alt 本地缓存存在
+            FlashItemCacheService -> FlashItemCacheService:比较传入版本与本地缓存版本
+            alt 本地版本等于或大于传入版本，本地缓存有效
+                FlashItemCacheService -> FlashItemCacheService:比较传入版本与本地缓存版本
+                FlashItemCacheService->FlashItemAPPService:返回缓存结果
+            else 本地缓存版本小于传入版本，本地缓存无效
+                FlashItemCacheService -> DistributedLockFactoryService:请求获取缓存更新锁
+                note right: 更新不在或失效的缓存时，必须加锁确保仅有一个线程可访问到数据库，防止缓存击穿
+                alt 缓存更新锁获取成功
+                    FlashItemCacheService -> DistributedCacheService:请求远程缓存
+                    DistributedCacheService --> FlashItemCacheService:返回远程缓存数据
+                    alt 远程缓存存在
+                        FlashItemCacheService -> FlashItemCacheService:更新本地缓存
+                        FlashItemCacheService -> FlashItemAPPService:返回缓存结果
+                    else  远程缓存不存在
+                        FlashItemCacheService -> FlashItemDomainService:从领域获取新的数据
+                        FlashItemDomainService --> FlashItemCacheService:返回领域数据结果
+                        note right: 即使数据不存在，结果也写入缓存，防止缓存穿透
+                        FlashItemCacheService -> DistributedCacheService:更新远程缓存
+                        FlashItemCacheService -> FlashItemCacheService:更新本地缓存
+                        FlashItemCacheService -> FlashItemAPPService:返回缓存结果
+                    end
+                else 缓存更新锁获取失败
+                    FlashItemCacheService -> FlashItemAPPService:返回稍后尝试结果
+                end
+            end
+        else 本地缓存不存在
+            FlashItemCacheService -> DistributedLockFactoryService:请求获取缓存更新锁
+            alt 缓存更新锁获取成功
+                FlashItemCacheService -> DistributedCacheService:请求远程缓存
+                DistributedCacheService --> FlashItemCacheService:返回远程缓存数据
+                alt 远程缓存存在
+                    FlashItemCacheService -> FlashItemCacheService:更新本地缓存
+                    FlashItemCacheService -> FlashItemAPPService:返回缓存结果
+                else 远程缓存不存在
+                    FlashItemCacheService -> FlashItemDomainService:从领域获取新的数据
+                    FlashItemDomainService --> FlashItemCacheService:返回领域数据结果
+                    FlashItemCacheService -> DistributedCacheService:更新远程缓存
+                    FlashItemCacheService -> FlashItemCacheService:更新本地缓存
+                    FlashItemCacheService -> FlashItemAPPService:返回缓存结果
+               end
+          else 缓存更新锁获取失败
+            FlashItemCacheService -> FlashItemAPPService:返回稍后尝试结果
+          end
+        end
+        ==缓存核心处理逻辑结束==
+        deactivate FlashItemCacheService
+
+        alt 命中缓存
+            FlashItemAPPService -> FlashItemAPPService:将FlashItem转换成FlashItemDTO
+            FlashItemAPPService -> FlashItemController:返回应用层结果
+            FlashItemController -> FlashItemController:将FlashItemDTO转换成FlashItemResponse
+         else 未命中缓存
+            FlashItemAPPService->FlashItemAPPService:构建稍后尝试或数据不存在结果
+            FlashItemAPPService -> FlashItemController:返回应用层结果
+        end
+        deactivate FlashItemAPPService
+        FlashItemController ->User:返回结果
+deactivate FlashItemController
+
+@enduml
+

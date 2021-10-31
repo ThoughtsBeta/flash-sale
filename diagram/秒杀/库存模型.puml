@@ -1,0 +1,85 @@
+@startuml
+!include ../theme/alihealth-uml-theme.iuml
+
+skinparam BoxPadding 15
+skinparam Padding 5
+
+Package 库存缓存模型 <<Frame>> #F2F2F2{
+    class "ItemStockCache"{
+        秒杀品库存缓存模型
+        ..
+        boolean exist:秒杀品是否存在
+        Integer availableStock:可用库存
+        Long version:本地数据版本
+        boolean later:是否稍后再试
+    }
+
+    class "ItemStockCacheService"{
+        秒杀品库存缓存核心服务
+        ..
+        initItemStock(Long itemId):初始化库存
+        decreaseItemStock(Long userId, Long itemId, Integer quantity):扣减库存
+        increaseItemStock(Long userId, Long itemId, Integer quantity):恢复库存
+        ItemStockCache getAvailableItemStock(Long itemId):获取可用库存
+    }
+    class DefaultItemStockCacheService implements ItemStockCacheService{
+        秒杀品缓存服务
+        ..
+    }
+}
+
+interface FlashItemDomainService{
+    秒杀品领域服务
+    ..
+}
+interface FlashActivityDomainService{
+    秒杀活动领域服务
+    ..
+}
+interface FlashOrderAppService{
+    秒杀品订单应用服务接口
+    ..
+}
+class FlashOrderAppServiceImpl implements FlashOrderAppService{
+    秒杀品订单应用服务
+    ..
+}
+interface FlashOrderDomainService{
+    秒杀订单领域服务
+    ..
+}
+interface ItemStockCacheService{
+    秒杀品缓存服务
+    ..
+}
+interface DistributedLockFactoryService{
+    分布式锁服务
+    ..
+}
+interface DistributedCacheService{
+    分布式缓存服务
+    ..
+}
+interface SecurityService{
+    安全服务
+    ..
+}
+interface RedisCacheService{
+    Redis缓存服务
+    ..
+}
+
+
+FlashOrderAppServiceImpl ..> FlashActivityDomainService
+FlashOrderAppServiceImpl ..> FlashItemDomainService
+FlashOrderAppServiceImpl ..> FlashOrderDomainService
+FlashOrderAppServiceImpl ..> DistributedLockFactoryService
+FlashOrderAppServiceImpl ..> SecurityService
+FlashOrderAppServiceImpl ..> ItemStockCacheService
+
+ItemStockCacheService ..> ItemStockCache
+DefaultItemStockCacheService .l.> FlashItemDomainService
+DefaultItemStockCacheService ..> RedisCacheService
+DefaultItemStockCacheService ..> DistributedCacheService
+DefaultItemStockCacheService .l.> DistributedLockFactoryService
+@enduml

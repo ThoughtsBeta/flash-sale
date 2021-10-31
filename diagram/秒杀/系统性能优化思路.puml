@@ -1,0 +1,82 @@
+@startmindmap
+
+!include ../theme/alihealth-uml-theme.iuml
+<style>
+mindmapDiagram {
+    node {
+        LineColor black
+        BackGroundColor white
+        MinimumWidth 100
+        HorizontalAlignment center
+    }
+    :depth(0) {
+      LineThickness 0
+      MinimumWidth 120
+
+    }
+    :depth(1) {
+      BackGroundColor white
+      LineThickness 0
+    }
+}
+arrow {
+    LineThickness 1
+    LineColor black
+}
+</style>
+*[#50BA90]:
+瓶颈分析思路
+;
+**[#FA5B87] 1. 服务端问题【头号嫌疑】
+*** 软件
+**** 应用
+*****[#FFFB00] JVM
+******_ GC次数（Full/Young）
+******_ GC耗时
+******_ Java线程
+******_ 堆/非堆内存
+***** TOMCAT
+******_ 忙碌线程池
+***** 错误监控
+******_ 业务错误监控
+
+**** 中间件
+***** RPC
+******_ QPS
+******_ RT
+******_ 成功率
+******_ 线程池
+*****[#FFFB00] 数据库
+******_ DB成功率
+******_ 读QPS
+******_ 写QPS
+******_ 读RT
+******_ 写RT
+******_ DB线程池
+***** 缓存
+******_ 成功率
+******_ 读QPS
+******_ 写QPS
+******_ 读RT
+******_ 写RT
+******_ 命中率
+***** 消息队列
+******_ 成功率
+******_ QPS
+******_ RT
+******_ 消息堆积
+*** 硬件
+**** 监控
+*****[#FFFB00] CPU
+***** Load
+*****[#FFFB00] 内存
+***** 硬盘
+left side
+
+**[#FDADC3] 2. 客户端问题【二号嫌疑】
+*** 资源加载检测
+*** 错误检测
+**[#FED7E1] 3. 网络问题【不太可能】
+*** 网络流量
+*** 网络异常率
+@endmindmap

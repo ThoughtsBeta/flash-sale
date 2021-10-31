@@ -1,0 +1,30 @@
+@startuml
+!include ../theme/alihealth-uml-theme.iuml
+
+skinparam BoxPadding 15
+skinparam Padding 5
+Package DomainModel <<Frame>> #F2F2F2{
+ class "FlashActivity"{
+    秒杀活动
+    ..
+    String activityName:活动名称
+    Date startTime:活动开始时间
+    Date endTime:活动结束时间
+    Integer status:活动状态
+    String activityDesc:活动描述
+ }
+}
+
+Package DomainService <<Frame>> #F2F2F2{
+ interface "FlashActivityService"{
+    秒杀活动
+    ..
+    void publishActivity(Long userId, FlashActivity flashActivity):发布秒杀活动
+    void onlineActivity(Long userId, Long activityId):上线活动
+    void offlineActivity(Long userId, Long activityId):下线活动
+    PageResult<FlashActivity> getFlashActivities(PagesQueryCondition pagesQueryCondition):根据条件获取秒杀品列表
+    FlashActivity getFlashActivity(Long activityId):根据ID获取指定秒杀活动
+    boolean isAllowPlaceOrderOrNot(Long activityId):检查活动当前是否允许下单
+ }
+}
+@enduml

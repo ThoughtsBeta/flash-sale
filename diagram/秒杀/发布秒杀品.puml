@@ -1,0 +1,57 @@
+@startuml
+!include ../theme/alihealth-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+skinparam BackgroundColor #F2F2F2
+
+hide footbox
+
+participant User
+
+participant FlashItemController
+participant FlashItemAPPService
+participant FlashItemDomainService
+participant FlashItemRepository
+participant DomainEventPublisher
+participant AuthService
+
+User->FlashItemController:请求秒杀品发布
+
+activate FlashItemController
+    FlashItemController->FlashItemController:FlashItemPublishRequest转为FlashItemPublishCommand
+    FlashItemController->FlashItemAPPService:进入应用层
+    activate FlashItemAPPService
+        FlashItemAPPService->AuthService:身份认证
+        alt 身份认证与权限校验未通过
+            FlashItemAPPService --> FlashItemController:返回结果
+            FlashItemController -->User:返回结果
+            deactivate FlashItemAPPService
+            deactivate FlashItemController
+        end
+        FlashItemAPPService --> FlashItemAPPService:所属秒杀活动校验
+        alt 活动校验未通过
+             FlashItemAPPService --> FlashItemController:返回应用层结果
+             FlashItemController -->User:返回结果
+        end
+        FlashItemAPPService --> FlashItemAPPService:FlashItemPublishCommand转为FlashItem
+        FlashItemAPPService --> FlashItemDomainService:进入领域层
+        activate FlashItemDomainService
+            FlashItemDomainService --> FlashItemDomainService:秒杀品领域信息与规则校验
+            alt 秒杀品领域信息与规则校验未通过
+                FlashItemDomainService --> FlashItemAPPService:返回结果
+                FlashItemAPPService --> FlashItemController:返回结果
+                FlashItemController -->User:返回结果
+            end
+            FlashItemDomainService --> FlashItemRepository:发布秒杀品
+            FlashItemDomainService --> DomainEventPublisher:发布秒杀品领域事件
+            FlashItemDomainService --> FlashItemAPPService:返回领域层结果
+        deactivate FlashItemDomainService
+       FlashItemAPPService --> FlashItemController:返回结果
+       deactivate FlashItemAPPService
+  FlashItemController -->User:返回结果
+deactivate FlashItemController
+@enduml
+

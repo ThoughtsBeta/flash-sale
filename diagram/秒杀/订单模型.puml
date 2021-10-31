@@ -1,0 +1,34 @@
+@startuml
+!include ../theme/alihealth-uml-theme.iuml
+
+skinparam BoxPadding 15
+skinparam Padding 5
+Package DomainModel <<Frame>> #F2F2F2{
+ class "FlashOrder"{
+    秒杀订单
+    ..
+    Long id:订单ID
+    Long itemId:商品ID
+    String itemTitle:秒杀品标题
+    Long flashPrice:秒杀价
+    Long activityId:活动ID
+    Integer quantity:下单商品数量
+    Long totalAmount:总金额
+    Integer status:订单状态
+    Long userId:用户ID
+    Date createTime:订单创建时间
+ }
+}
+
+Package DomainService <<Frame>> #F2F2F2{
+ interface "FlashOrderService"{
+    秒杀订单领域服务
+    ..
+    boolean placeOrder(Long userId, FlashOrder flashOrder):下单
+    PageResult<FlashOrder> getOrdersByUser(Long userId, PagesQueryCondition pagesQueryCondition):根据用户获取订单
+    List<FlashOrder> getOrders(PagesQueryCondition pagesQueryCondition):根据条件获取订单
+    FlashOrder getOrder(Long userId, Long orderId):根据ID获取指定订单
+    boolean cancelOrder(Long userId, Long orderId):根据ID取消订单
+ }
+}
+@enduml

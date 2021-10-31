@@ -1,0 +1,54 @@
+@startuml
+!include ../theme/alihealth-uml-theme.iuml
+
+skinparam BoxPadding 15
+skinparam Padding 5
+
+Package 缓存模型 <<Frame>> #F2F2F2{
+    class "FlashItemCache"{
+        秒杀品缓存模型
+        ..
+        boolean exist:秒杀品是否存在
+        FlashItem flashItem:
+        Long version:本地数据版本
+        boolean later:是否稍后再试
+    }
+
+    class "FlashItemCacheService"{
+        秒杀品缓存核心服务
+        ..
+        FlashItemCache getCachedItem(Long itemId, Long version):获取缓存的秒杀品
+        FlashItemCache tryToUpdateItemCacheByLock(Long itemId):尝试更新秒杀品缓存
+    }
+}
+
+class FlashItem{
+    秒杀品
+    ..
+}
+
+interface DistributedCacheService{
+    分布式缓存服务
+    ..
+}
+interface FlashItemDomainService{
+    秒杀品领域服务
+    ..
+}
+interface DistributedLockFactoryService{
+    分布式锁服务
+    ..
+}
+interface FlashItemAPPService{
+    秒杀品应用服务
+    ..
+}
+
+
+FlashItemAPPService ..> FlashItemCacheService
+FlashItemCacheService ..> FlashItemDomainService
+FlashItemCacheService ..> DistributedCacheService
+FlashItemCacheService ..> DistributedLockFactoryService
+FlashItemCache ..|> FlashItem
+FlashItemCacheService ..> FlashItemCache
+@enduml
