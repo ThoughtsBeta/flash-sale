@@ -137,7 +137,7 @@
         SET modified_time   = now(),
             available_stock = available_stock - #{quantity}
         where id = #{itemId}
-          and available_stock <![CDATA[ >= ]]> 0
+          and available_stock <![CDATA[ >= ]]>  #{quantity}
     </update>
 
     <update id="increaseItemStock" parameterType="com.actionworks.flashsale.persistence.model.FlashItemDO">
