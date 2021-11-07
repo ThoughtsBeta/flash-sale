@@ -33,7 +33,7 @@ import static com.actionworks.flashsale.app.model.builder.FlashActivityAppBuilde
 import static com.actionworks.flashsale.controller.exception.ErrorCode.INVALID_TOKEN;
 
 @Service
-public class FlashActivityAppServiceImpl implements FlashActivityAppService {
+public class DefaultActivityAppService implements FlashActivityAppService {
 
     @Resource
     private FlashActivityDomainService flashActivityDomainService;
@@ -125,7 +125,7 @@ public class FlashActivityAppServiceImpl implements FlashActivityAppService {
         }
         FlashActivityDTO flashActivityDTO = FlashActivityAppBuilder.toFlashActivityDTO(flashActivityCache.getFlashActivity());
         flashActivityDTO.setVersion(flashActivityCache.getVersion());
-        return AppSingleResult.of(flashActivityDTO);
+        return AppSingleResult.ok(flashActivityDTO);
     }
 
     @Override
@@ -139,6 +139,6 @@ public class FlashActivityAppServiceImpl implements FlashActivityAppService {
         }
         FlashActivityDTO flashActivityDTO = FlashActivityAppBuilder.toFlashActivityDTO(flashActivityCache.getFlashActivity());
         flashActivityDTO.setVersion(flashActivityCache.getVersion());
-        return AppSingleResult.of(flashActivityDTO);
+        return AppSingleResult.ok(flashActivityDTO);
     }
 }

@@ -1,5 +1,6 @@
 package com.actionworks.flashsale.app.model.dto;
 
+import com.actionworks.flashsale.domain.model.enums.FlashItemStatus;
 import lombok.Data;
 
 import java.util.Date;
@@ -58,4 +59,18 @@ public class FlashItemDTO {
      * 数据版本号
      */
     private Long version;
+
+    /**
+     * 当前秒杀品秒杀是否出于售卖状态
+     */
+    public boolean isOnSale() {
+        if (!FlashItemStatus.isOnline(status)) {
+            return false;
+        }
+        if (startTime == null || endTime == null) {
+            return false;
+        }
+        Date now = new Date();
+        return (startTime.equals(now) || startTime.before(now)) && endTime.after(now);
+    }
 }

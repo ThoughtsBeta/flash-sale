@@ -9,13 +9,15 @@ import com.actionworks.flashsale.app.model.dto.FlashOrderDTO;
 import com.actionworks.flashsale.app.model.query.FlashOrdersQuery;
 import com.actionworks.flashsale.app.model.result.AppMultiResult;
 import com.actionworks.flashsale.app.model.result.AppResult;
+import com.actionworks.flashsale.app.model.result.AppSingleResult;
+import com.actionworks.flashsale.app.model.result.OrderTaskHandleResult;
+import com.actionworks.flashsale.app.model.result.PlaceOrderResult;
 import com.actionworks.flashsale.app.security.SecurityService;
 import com.actionworks.flashsale.app.service.FlashOrderAppService;
+import com.actionworks.flashsale.app.service.PlaceOrderService;
 import com.actionworks.flashsale.controller.exception.AuthException;
 import com.actionworks.flashsale.domain.model.PageResult;
-import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.model.entity.FlashOrder;
-import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
 import com.actionworks.flashsale.domain.service.FlashOrderDomainService;
 import com.actionworks.flashsale.lock.DistributedLock;
@@ -32,24 +34,23 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.actionworks.flashsale.app.exception.AppErrorCode.OPERATE_TOO_QUICKILY_ERROR;
+import static com.actionworks.flashsale.app.exception.AppErrorCode.FREQUENTLY_ERROR;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ORDER_CANCEL_FAILED;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ORDER_NOT_FOUND;
+import static com.actionworks.flashsale.app.exception.AppErrorCode.ORDER_TYPE_NOT_SUPPORT;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.PLACE_ORDER_FAILED;
-import static com.actionworks.flashsale.app.model.builder.FlashOrderAppBuilder.toDomain;
 import static com.actionworks.flashsale.app.model.builder.FlashOrderAppBuilder.toFlashOrdersQuery;
 import static com.actionworks.flashsale.controller.exception.ErrorCode.INVALID_TOKEN;
 
 @Service
-public class FlashOrderAppServiceImpl implements FlashOrderAppService {
-    private static final Logger logger = LoggerFactory.getLogger(FlashOrderAppServiceImpl.class);
+public class DefaultFlashOrderAppService implements FlashOrderAppService {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultFlashOrderAppService.class);
 
     @Resource
     private FlashOrderDomainService flashOrderDomainService;
     @Resource
     private FlashItemDomainService flashItemDomainService;
-    @Resource
-    private FlashActivityDomainService flashActivityDomainService;
+
     @Resource
     private AuthorizationService authorizationService;
     @Resource
@@ -58,70 +59,57 @@ public class FlashOrderAppServiceImpl implements FlashOrderAppService {
     private DistributedLockFactoryService lockFactoryService;
     @Resource
     private SecurityService securityService;
+    @Resource
+    private PlaceOrderService placeOrderService;
 
     @Override
     @Transactional
-    public AppResult placeOrder(String token, FlashPlaceOrderCommand placeOrderCommand) {
+    public AppSingleResult<PlaceOrderResult> placeOrder(String token, FlashPlaceOrderCommand placeOrderCommand) {
         AuthResult authResult = authorizationService.auth(token);
         if (!authResult.isSuccess()) {
             throw new AuthException(INVALID_TOKEN);
         }
-        boolean isPassRiskInspect = securityService.inspectRisksByPolicy(authResult.getUserId());
-        if (!isPassRiskInspect) {
-            logger.info("placeOrder|综合风控检验未通过:{}", authResult.getUserId());
-            return AppResult.buildFailure(PLACE_ORDER_FAILED);
-        }
-        boolean isActivityAllowPlaceOrder = flashActivityDomainService.isAllowPlaceOrderOrNot(placeOrderCommand.getActivityId());
-        if (!isActivityAllowPlaceOrder) {
-            logger.info("placeOrder|秒杀活动下单规则校验未通过:{}", authResult.getUserId(), placeOrderCommand.getActivityId());
-            return AppResult.buildFailure(PLACE_ORDER_FAILED);
-        }
-        boolean isItemAllowPlaceOrder = flashItemDomainService.isAllowPlaceOrderOrNot(placeOrderCommand.getItemId());
-        if (!isItemAllowPlaceOrder) {
-            logger.info("placeOrder|秒杀品下单规则校验未通过:{}", authResult.getUserId(), placeOrderCommand.getActivityId());
-            return AppResult.buildFailure(PLACE_ORDER_FAILED);
-        }
-        FlashItem flashItem = flashItemDomainService.getFlashItem(placeOrderCommand.getItemId());
-        FlashOrder flashOrderToPlace = toDomain(placeOrderCommand);
-        flashOrderToPlace.setItemTitle(flashItem.getItemTitle());
-        flashOrderToPlace.setFlashPrice(flashItem.getFlashPrice());
-        flashOrderToPlace.setUserId(authResult.getUserId());
-
         String placeOrderLockKey = "PLACE_ORDER_" + authResult.getUserId();
         DistributedLock placeOrderLock = lockFactoryService.getDistributedLock(placeOrderLockKey);
-        boolean preDecreaseStockSuccess = false;
         try {
             boolean isLockSuccess = placeOrderLock.tryLock(5, 5, TimeUnit.SECONDS);
             if (!isLockSuccess) {
-                return AppResult.buildFailure(OPERATE_TOO_QUICKILY_ERROR.getErrCode(), OPERATE_TOO_QUICKILY_ERROR.getErrDesc());
+                return AppSingleResult.failed(FREQUENTLY_ERROR.getErrCode(), FREQUENTLY_ERROR.getErrDesc());
             }
-            preDecreaseStockSuccess = itemStockCacheService.decreaseItemStock(authResult.getUserId(), placeOrderCommand.getItemId(), placeOrderCommand.getQuantity());
-            if (!preDecreaseStockSuccess) {
-                logger.info("placeOrder|库存预扣减失败:{},{}", authResult.getUserId(), JSON.toJSONString(placeOrderCommand));
-                return AppResult.buildFailure(PLACE_ORDER_FAILED.getErrCode(), PLACE_ORDER_FAILED.getErrDesc());
+            boolean isPassRiskInspect = securityService.inspectRisksByPolicy(authResult.getUserId());
+            if (!isPassRiskInspect) {
+                logger.info("placeOrder|综合风控检验未通过:{}", authResult.getUserId());
+                return AppSingleResult.failed(PLACE_ORDER_FAILED);
             }
-            boolean decreaseStockSuccess = flashItemDomainService.decreaseItemStock(placeOrderCommand.getItemId(), placeOrderCommand.getQuantity());
-            if (!decreaseStockSuccess) {
-                logger.info("placeOrder|库存预扣减失败:{},{}", authResult.getUserId(), JSON.toJSONString(placeOrderCommand));
-                return AppResult.buildFailure(PLACE_ORDER_FAILED.getErrCode(), PLACE_ORDER_FAILED.getErrDesc());
+            PlaceOrderResult placeOrderResult = placeOrderService.placeOrder(authResult.getUserId(), placeOrderCommand);
+            if (!placeOrderResult.isSuccess()) {
+                return AppSingleResult.failed(placeOrderResult.getCode(), placeOrderResult.getMessage());
             }
-            boolean placeOrderSuccess = flashOrderDomainService.placeOrder(authResult.getUserId(), flashOrderToPlace);
-            if (!placeOrderSuccess) {
-                throw new BizException(PLACE_ORDER_FAILED.getErrDesc());
-            }
+            return AppSingleResult.ok(placeOrderResult);
         } catch (Exception e) {
-            if (preDecreaseStockSuccess) {
-                boolean recoverStockSuccess = itemStockCacheService.increaseItemStock(authResult.getUserId(), placeOrderCommand.getItemId(), placeOrderCommand.getQuantity());
-                if (!recoverStockSuccess) {
-                    logger.error("placeOrder|预扣库存恢复失败:{},{}", authResult.getUserId(), JSON.toJSONString(placeOrderCommand), e);
-                }
-            }
             logger.error("placeOrder|下单失败:{},{}", authResult.getUserId(), JSON.toJSONString(placeOrderCommand), e);
-            throw new BizException(PLACE_ORDER_FAILED.getErrDesc());
+            return AppSingleResult.failed(PLACE_ORDER_FAILED);
         } finally {
             placeOrderLock.forceUnlock();
         }
-        return AppResult.buildSuccess();
+    }
+
+    @Override
+    public AppSingleResult<OrderTaskHandleResult> getPlaceOrderTaskResult(String token, Long itemId, String placeOrderTaskId) {
+        AuthResult authResult = authorizationService.auth(token);
+        if (!authResult.isSuccess()) {
+            throw new AuthException(INVALID_TOKEN);
+        }
+        if (placeOrderService instanceof QueuedPlaceOrderService) {
+            QueuedPlaceOrderService queuedPlaceOrderService = (QueuedPlaceOrderService) placeOrderService;
+            OrderTaskHandleResult orderTaskHandleResult = queuedPlaceOrderService.getPlaceOrderResult(authResult.getUserId(), itemId, placeOrderTaskId);
+            if (!orderTaskHandleResult.isSuccess()) {
+                return AppSingleResult.failed(orderTaskHandleResult.getCode(), orderTaskHandleResult.getMessage(), orderTaskHandleResult);
+            }
+            return AppSingleResult.ok(orderTaskHandleResult);
+        } else {
+            return AppSingleResult.failed(ORDER_TYPE_NOT_SUPPORT);
+        }
     }
 
     @Override

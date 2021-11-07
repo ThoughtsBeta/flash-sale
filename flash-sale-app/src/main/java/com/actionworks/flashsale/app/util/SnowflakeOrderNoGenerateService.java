@@ -1,14 +1,13 @@
-package com.actionworks.flashsale.util;
+package com.actionworks.flashsale.app.util;
 
-import com.actionworks.flashsale.domain.util.OrderNoGenerateContext;
-import com.actionworks.flashsale.domain.util.OrderNoGenrateService;
+import com.actionworks.flashsale.util.SnowflakeIdWorker;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.Random;
 
 @Component
-public class SnowflakeOrderNoGenerateService implements OrderNoGenrateService {
+public class SnowflakeOrderNoGenerateService implements OrderNoGenerateService {
 
     private SnowflakeIdWorker snowflakeIdWorker;
 

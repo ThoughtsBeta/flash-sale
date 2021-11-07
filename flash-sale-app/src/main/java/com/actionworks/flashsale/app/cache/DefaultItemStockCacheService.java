@@ -7,7 +7,6 @@ import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
 import com.actionworks.flashsale.lock.DistributedLock;
 import com.actionworks.flashsale.lock.DistributedLockFactoryService;
-import com.alibaba.fastjson.JSON;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.slf4j.Logger;
@@ -20,16 +19,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.actionworks.flashsale.app.cache.model.CacheConstatants.FIVE_MINUTES;
-
 @Service
 public class DefaultItemStockCacheService implements ItemStockCacheService {
-    public static final String INIT_ITEM_STOCK_LUA;
-    public static final String INCREASE_ITEM_STOCK_LUA;
-    public static final String DECREASE_ITEM_STOCK_LUA;
+    public static final int IN_STOCK_ALIGNING = -9;
+    private static final String INIT_ITEM_STOCK_LUA;
+    private static final String INCREASE_ITEM_STOCK_LUA;
+    private static final String DECREASE_ITEM_STOCK_LUA;
+    private static final String ALIGN_ITEM_STOCK_LUA;
     private static final Logger logger = LoggerFactory.getLogger(DefaultItemStockCacheService.class);
     private final static Cache<Long, ItemStockCache> itemStockLocalCache = CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(5).expireAfterWrite(10, TimeUnit.SECONDS).build();
     private static final String ITEM_STOCK_KEY = "ITEM_STOCK_KEY_";
+    private static final String ITEM_STOCK_ALIGN_LOCK_KEY = "ITEM_STOCK_ALIGN_LOCK_KEY_";
 
     static {
 
@@ -40,7 +40,10 @@ public class DefaultItemStockCacheService implements ItemStockCacheService {
                 "redis.call('set', KEYS[1] , stockNumber);" +
                 "return 1";
 
-        INCREASE_ITEM_STOCK_LUA = "if (redis.call('exists', KEYS[1]) == 1) then" +
+        INCREASE_ITEM_STOCK_LUA = "if (redis.call('exists', KEYS[2]) == 1) then" +
+                "    return -9;" +
+                "end;" +
+                "if (redis.call('exists', KEYS[1]) == 1) then" +
                 "    local stock = tonumber(redis.call('get', KEYS[1]));" +
                 "    local num = tonumber(ARGV[1]);" +
                 "    redis.call('incrby', KEYS[1] , num);" +
@@ -49,7 +52,10 @@ public class DefaultItemStockCacheService implements ItemStockCacheService {
                 "return -1;";
 
 
-        DECREASE_ITEM_STOCK_LUA = "if (redis.call('exists', KEYS[1]) == 1) then" +
+        DECREASE_ITEM_STOCK_LUA = "if (redis.call('exists', KEYS[2]) == 1) then" +
+                "    return -9;" +
+                "end;" +
+                "if (redis.call('exists', KEYS[1]) == 1) then" +
                 "    local stock = tonumber(redis.call('get', KEYS[1]));" +
                 "    local num = tonumber(ARGV[1]);" +
                 "    if (stock < num) then" +
@@ -62,6 +68,12 @@ public class DefaultItemStockCacheService implements ItemStockCacheService {
                 "    return -2;" +
                 "end;" +
                 "return -1;";
+
+        ALIGN_ITEM_STOCK_LUA = "redis.call('set', KEYS[1] , 1);" +
+                "local stockNumber = tonumber(ARGV[1]);" +
+                "redis.call('set', KEYS[2] , stockNumber);" +
+                "redis.call('del', KEYS[1]);" +
+                "return 1";
     }
 
     @Resource
@@ -72,8 +84,6 @@ public class DefaultItemStockCacheService implements ItemStockCacheService {
     private DistributedLockFactoryService distributedLockFactoryService;
     @Resource
     private DistributedCacheService distributedCacheService;
-    @Resource
-    private FlashItemDomainService itemStockDomainService;
 
     @Override
     public boolean initItemStock(Long itemId) {
@@ -131,26 +141,39 @@ public class DefaultItemStockCacheService implements ItemStockCacheService {
             logger.info("decreaseItemStock|秒杀品库存未预热:{}", itemId);
             return false;
         }
-
-        List<String> keys = new ArrayList<>();
-        keys.add(itemStockKey);
-        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(DECREASE_ITEM_STOCK_LUA, Long.class);
-        Long result = (Long) redisCacheService.getRedisTemplate().execute(redisScript, keys, quantity);
-        if (result == null) {
-            logger.info("decreaseItemStock|库存扣减失败:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
+        try {
+            List<String> keys = new ArrayList<>();
+            keys.add(itemStockKey);
+            keys.add(getItemStockAlignKey(itemId));
+            DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(DECREASE_ITEM_STOCK_LUA, Long.class);
+            Long result = null;
+            long startTime = System.currentTimeMillis();
+            while ((result == null || result == IN_STOCK_ALIGNING) && (System.currentTimeMillis() - startTime) < 1500) {
+                result = (Long) redisCacheService.getRedisTemplate().execute(redisScript, keys, quantity);
+                if (result == null) {
+                    logger.info("decreaseItemStock|库存扣减失败:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
+                    return false;
+                }
+                if (result == IN_STOCK_ALIGNING) {
+                    logger.info("decreaseItemStock|库存校准中:{},{},{},{}", itemId, itemStockKey, quantity, userId);
+                    Thread.sleep(20);
+                }
+                if (result == -1 || result == -2) {
+                    logger.info("decreaseItemStock|库存扣减失败:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
+                    return false;
+                }
+                if (result == -3) {
+                    logger.info("decreaseItemStock|库存扣减失败:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
+                    return false;
+                }
+                if (result == 1) {
+                    logger.info("decreaseItemStock|库存扣减成功:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            logger.error("increaseItemStock|库存增加失败:{},{},{},{}", itemId, itemStockKey, quantity, userId, e);
             return false;
-        }
-        if (result == -1 || result == -2) {
-            logger.info("decreaseItemStock|库存扣减失败:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
-            return false;
-        }
-        if (result == -3) {
-            logger.info("decreaseItemStock|库存扣减失败:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
-            return false;
-        }
-        if (result == 1) {
-            logger.info("decreaseItemStock|库存扣减成功:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
-            return true;
         }
         return false;
     }
@@ -165,22 +188,35 @@ public class DefaultItemStockCacheService implements ItemStockCacheService {
             logger.info("increaseItemStock|秒杀品库存未预热:{}", itemId);
             return false;
         }
-
-        List<String> keys = new ArrayList<>();
-        keys.add(itemStockKey);
-        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(INCREASE_ITEM_STOCK_LUA, Long.class);
-        Long result = (Long) redisCacheService.getRedisTemplate().execute(redisScript, keys, quantity);
-        if (result == null) {
-            logger.info("increaseItemStock|库存增加失败:{},{},{},{}", itemId, itemStockKey, quantity, userId);
+        try {
+            List<String> keys = new ArrayList<>();
+            keys.add(itemStockKey);
+            keys.add(getItemStockAlignKey(itemId));
+            DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(INCREASE_ITEM_STOCK_LUA, Long.class);
+            Long result = null;
+            long startTime = System.currentTimeMillis();
+            while ((result == null || result == IN_STOCK_ALIGNING) && (System.currentTimeMillis() - startTime) < 1500) {
+                result = (Long) redisCacheService.getRedisTemplate().execute(redisScript, keys, quantity);
+                if (result == null) {
+                    logger.info("increaseItemStock|库存增加失败:{},{},{},{}", itemId, itemStockKey, quantity, userId);
+                    return false;
+                }
+                if (result == IN_STOCK_ALIGNING) {
+                    logger.info("increaseItemStock|库存校准中:{},{},{},{}", itemId, itemStockKey, quantity, userId);
+                    Thread.sleep(20);
+                }
+                if (result == -1) {
+                    logger.info("increaseItemStock|库存增加失败:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
+                    return false;
+                }
+                if (result == 1) {
+                    logger.info("increaseItemStock|库存增加成功:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            logger.error("increaseItemStock|库存增加失败:{},{},{},{}", itemId, itemStockKey, quantity, userId, e);
             return false;
-        }
-        if (result == -1) {
-            logger.info("increaseItemStock|库存增加失败:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
-            return false;
-        }
-        if (result == 1) {
-            logger.info("increaseItemStock|库存增加成功:{},{},{},{}", result, itemId, itemStockKey, quantity, userId);
-            return true;
         }
         return false;
     }
@@ -197,7 +233,34 @@ public class DefaultItemStockCacheService implements ItemStockCacheService {
         logger.info("Item stock local cache was updated:{}", itemId);
         return itemStockCache;
     }
+
+    @Override
+    public boolean alignItemStocks(Long itemId, Integer availableStock) {
+        if (itemId == null || availableStock == null) {
+            return false;
+        }
+
+        List<String> keys = new ArrayList<>();
+        keys.add(getItemStockAlignKey(itemId));
+        keys.add(getItemStockKey(itemId));
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(ALIGN_ITEM_STOCK_LUA, Long.class);
+        Long result = (Long) redisCacheService.getRedisTemplate().execute(redisScript, keys, availableStock);
+        if (result == null) {
+            logger.info("alignItemStocks|库存校准失败:{},{}", itemId, availableStock);
+            return false;
+        }
+        if (result == 1) {
+            logger.info("alignItemStocks|库存校准成功:{},{},{}", result, itemId, availableStock);
+            return true;
+        }
+        return false;
+    }
+
     private String getItemStockKey(Long itemId) {
         return ITEM_STOCK_KEY + itemId;
+    }
+
+    private String getItemStockAlignKey(Long itemId) {
+        return ITEM_STOCK_ALIGN_LOCK_KEY + itemId;
     }
 }

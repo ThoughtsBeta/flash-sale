@@ -2,8 +2,10 @@ package com.actionworks.flashsale.app.model.result;
 
 import com.actionworks.flashsale.app.exception.AppErrorCode;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 @Data
+@Accessors(chain = true)
 public class AppResult {
     private static final long serialVersionUID = 1L;
     private boolean success;

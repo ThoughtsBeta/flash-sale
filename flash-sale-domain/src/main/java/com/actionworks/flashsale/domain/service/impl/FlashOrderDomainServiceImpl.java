@@ -10,8 +10,6 @@ import com.actionworks.flashsale.domain.model.entity.FlashOrder;
 import com.actionworks.flashsale.domain.model.enums.FlashOrderStatus;
 import com.actionworks.flashsale.domain.repository.FlashOrderRepository;
 import com.actionworks.flashsale.domain.service.FlashOrderDomainService;
-import com.actionworks.flashsale.domain.util.OrderNoGenerateContext;
-import com.actionworks.flashsale.domain.util.OrderNoGenrateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -34,9 +32,6 @@ public class FlashOrderDomainServiceImpl implements FlashOrderDomainService {
     @Resource
     private DomainEventPublisher domainEventPublisher;
 
-    @Resource
-    private OrderNoGenrateService orderNoGenrateService;
-
     @Override
     public boolean placeOrder(Long userId, FlashOrder flashOrder) {
         logger.info("Preparing to create flash order:{},{}", userId, flashOrder);
@@ -44,7 +39,6 @@ public class FlashOrderDomainServiceImpl implements FlashOrderDomainService {
             throw new DomainException(ONLINE_FLASH_ITEM_PARAMS_INVALID);
         }
         flashOrder.setStatus(FlashOrderStatus.CREATED.getCode());
-        flashOrder.setId(orderNoGenrateService.generateOrderNo(new OrderNoGenerateContext()));
         boolean saveSuccess = flashOrderRepository.save(flashOrder);
         if (saveSuccess) {
             FlashOrderEvent flashOrderEvent = new FlashOrderEvent();

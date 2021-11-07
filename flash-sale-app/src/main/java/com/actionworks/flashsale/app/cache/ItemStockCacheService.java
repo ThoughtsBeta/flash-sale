@@ -10,4 +10,6 @@ public interface ItemStockCacheService {
     boolean increaseItemStock(Long userId, Long itemId, Integer quantity);
 
     ItemStockCache getAvailableItemStock(Long itemId);
+
+    boolean alignItemStocks(Long id, Integer availableStock);
 }

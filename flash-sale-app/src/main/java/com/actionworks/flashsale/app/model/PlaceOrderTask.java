@@ -1,9 +1,14 @@
-package com.actionworks.flashsale.app.model.command;
+package com.actionworks.flashsale.app.model;
 
 import lombok.Data;
 
 @Data
-public class FlashPlaceOrderCommand {
+public class PlaceOrderTask {
+    String placeOrderTaskId;
+    /**
+     * 下单用户ID
+     */
+    private Long userId;
     /**
      * 订单ID
      */
@@ -24,8 +29,4 @@ public class FlashPlaceOrderCommand {
      * 总金额
      */
     private Long totalAmount;
-
-    public boolean validateParams() {
-        return itemId != null && activityId != null && quantity != null && quantity > 0;
-    }
 }

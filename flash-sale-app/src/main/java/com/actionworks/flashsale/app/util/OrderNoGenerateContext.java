@@ -1,4 +1,4 @@
-package com.actionworks.flashsale.domain.util;
+package com.actionworks.flashsale.app.util;
 
 import lombok.Data;
 

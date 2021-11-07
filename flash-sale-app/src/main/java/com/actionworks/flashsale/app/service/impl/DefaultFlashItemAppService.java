@@ -38,7 +38,7 @@ import static com.actionworks.flashsale.app.model.builder.FlashItemAppBuilder.to
 import static com.actionworks.flashsale.controller.exception.ErrorCode.INVALID_TOKEN;
 
 @Service
-public class FlashItemAppServiceImpl implements FlashItemAppService {
+public class DefaultFlashItemAppService implements FlashItemAppService {
 
     @Resource
     private FlashItemDomainService flashItemDomainService;
@@ -136,7 +136,22 @@ public class FlashItemAppServiceImpl implements FlashItemAppService {
         updateLatestItemStock(flashItemCache.getFlashItem());
         FlashItemDTO flashItemDTO = FlashItemAppBuilder.toFlashItemDTO(flashItemCache.getFlashItem());
         flashItemDTO.setVersion(flashItemCache.getVersion());
-        return AppSingleResult.of(flashItemDTO);
+        return AppSingleResult.ok(flashItemDTO);
+    }
+
+    @Override
+    public AppSingleResult<FlashItemDTO> getFlashItem(Long itemId) {
+        FlashItemCache flashItemCache = flashItemCacheService.getCachedItem(itemId, null);
+        if (!flashItemCache.isExist()) {
+            throw new BizException(ACTIVITY_NOT_FOUND.getErrDesc());
+        }
+        if (flashItemCache.isLater()) {
+            return AppSingleResult.tryLater();
+        }
+        updateLatestItemStock(flashItemCache.getFlashItem());
+        FlashItemDTO flashItemDTO = FlashItemAppBuilder.toFlashItemDTO(flashItemCache.getFlashItem());
+        flashItemDTO.setVersion(flashItemCache.getVersion());
+        return AppSingleResult.ok(flashItemDTO);
     }
 
     private void updateLatestItemStock(FlashItem flashItem) {

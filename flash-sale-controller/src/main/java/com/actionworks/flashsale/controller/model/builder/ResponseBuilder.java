@@ -37,8 +37,8 @@ public class ResponseBuilder {
         }
         SingleResponse singleResponse = new SingleResponse();
         singleResponse.setSuccess(appResult.isSuccess());
-        singleResponse.setErrCode(appResult.getErrCode());
-        singleResponse.setErrMessage(appResult.getErrMessage());
+        singleResponse.setErrCode(appResult.getCode());
+        singleResponse.setErrMessage(appResult.getMessage());
         singleResponse.setData(appResult.getData());
         return singleResponse;
     }

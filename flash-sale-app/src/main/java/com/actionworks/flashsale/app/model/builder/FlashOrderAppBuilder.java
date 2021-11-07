@@ -1,5 +1,6 @@
 package com.actionworks.flashsale.app.model.builder;
 
+import com.actionworks.flashsale.app.model.PlaceOrderTask;
 import com.actionworks.flashsale.app.model.command.FlashPlaceOrderCommand;
 import com.actionworks.flashsale.app.model.dto.FlashOrderDTO;
 import com.actionworks.flashsale.app.model.query.FlashOrdersQuery;
@@ -14,6 +15,15 @@ public class FlashOrderAppBuilder {
         }
         FlashOrder flashOrder = new FlashOrder();
         BeanUtils.copyProperties(flashPlaceOrderCommand, flashOrder);
+        return flashOrder;
+    }
+
+    public static FlashOrder toDomain(PlaceOrderTask PlaceOrderTask) {
+        if (PlaceOrderTask == null) {
+            return null;
+        }
+        FlashOrder flashOrder = new FlashOrder();
+        BeanUtils.copyProperties(PlaceOrderTask, flashOrder);
         return flashOrder;
     }
 

@@ -19,4 +19,6 @@ public interface FlashItemAppService {
 
 
     AppSingleResult<FlashItemDTO> getFlashItem(String token, Long activityId, Long itemId, Long version);
+
+    AppSingleResult<FlashItemDTO> getFlashItem(Long itemId);
 }
