@@ -741,6 +741,58 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "获取已提交订单的状态",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "de250ea3-5b72-48c2-83d7-36b6c8ddeb07",
+								"exec": [
+									"const moment = require('moment');",
+									"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:8090/items/14/flash-orders/1ad648571b920156266b9b6ba56229f6?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"items",
+								"14",
+								"flash-orders",
+								"1ad648571b920156266b9b6ba56229f6"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"protocolProfileBehavior": {}
