@@ -10,27 +10,43 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class RedisCacheService implements DistributedCacheService {
     @Resource
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public void put(String key, String value) {
+        if (StringUtils.isEmpty(key) || value == null) {
+            return;
+        }
         redisTemplate.opsForValue().set(key, value);
     }
 
     @Override
-    public boolean put(String key, String value, long expireTime) {
-        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
-            return false;
+    public void put(String key, Object value) {
+        if (StringUtils.isEmpty(key) || value == null) {
+            return;
         }
-        Object result = redisTemplate.execute((RedisCallback<Boolean>) connection -> {
-            connection.setEx(key.getBytes(), expireTime, value.getBytes());
-            return true;
-        });
-        return result != null;
+        redisTemplate.opsForValue().set(key, value);
+    }
+
+    @Override
+    public void put(String key, Object value, long timeout, TimeUnit unit) {
+        if (StringUtils.isEmpty(key) || value == null) {
+            return;
+        }
+        redisTemplate.opsForValue().set(key, value, timeout, unit);
+    }
+
+    @Override
+    public void put(String key, Object value, long expireTime) {
+        if (StringUtils.isEmpty(key) || value == null) {
+            return;
+        }
+        redisTemplate.opsForValue().set(key, value, expireTime, TimeUnit.SECONDS);
     }
 
     @Override
@@ -78,8 +94,7 @@ public class RedisCacheService implements DistributedCacheService {
         return redisTemplate.hasKey(key);
     }
 
-    public RedisTemplate getRedisTemplate() {
+    public RedisTemplate<String, Object> getRedisTemplate() {
         return redisTemplate;
     }
-
 }
