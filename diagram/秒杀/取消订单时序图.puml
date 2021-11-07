@@ -1,0 +1,110 @@
+@startuml
+!include ../theme/alihealth-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+skinparam BackgroundColor #F2F2F2
+
+hide footbox
+
+participant User
+participant Gateway
+participant Sentinel
+participant Controller
+participant OrderAPPService
+participant FlashOrderDomainService
+participant ItemStockCacheService
+participant FlashActivityDomainService
+participant FlashItemDomainService
+participant DistributedLockFactoryService
+
+participant AuthService
+participant Redis
+participant Repository
+
+User->Controller:进入应用服务接口层
+activate Controller
+Controller->OrderAPPService:进入应用服务应用层
+
+activate OrderAPPService
+activate AuthService
+OrderAPPService->AuthService:账号校验
+AuthService-->OrderAPPService:返回账号校验结果
+deactivate AuthService
+alt  账号校验未通过
+    OrderAPPService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+
+OrderAPPService->DistributedLockFactoryService:获取订单取锁
+alt  获取锁失败
+    OrderAPPService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+
+activate FlashActivityDomainService
+OrderAPPService -> FlashActivityDomainService:根据活动配置校验是否允许取消订单
+FlashActivityDomainService --> OrderAPPService:返回校验结果
+alt  秒杀活动取消订单校验未通过
+    OrderAPPService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+activate FlashItemDomainService
+OrderAPPService -> FlashItemDomainService:根据秒杀品配置校验是否允许取消订单
+FlashItemDomainService --> OrderAPPService:返回校验结果
+alt  秒杀品取消订单校验未通过
+    OrderAPPService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+deactivate FlashItemDomainService
+
+activate FlashOrderDomainService
+OrderAPPService -> FlashOrderDomainService:获取订单
+FlashOrderDomainService --> OrderAPPService:返回订单
+alt 订单是否存在及归属校验未通过
+    FlashOrderDomainService --> OrderAPPService:返回领域层结果
+    OrderAPPService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+FlashOrderDomainService -> FlashOrderDomainService:校验订单是否可以取消
+alt  订单状态不允许取消
+    FlashOrderDomainService --> OrderAPPService:返回领域层结果
+    OrderAPPService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+FlashOrderDomainService -> Repository:取消订单
+Repository --> FlashOrderDomainService:返回订单取消结果
+FlashOrderDomainService --> OrderAPPService:返回订单取消结果
+deactivate FlashOrderDomainService
+alt  订单取消失败
+    OrderAPPService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+deactivate FlashOrderDomainService
+activate FlashItemDomainService
+OrderAPPService->FlashItemDomainService:恢复秒杀品库存
+FlashItemDomainService-->OrderAPPService:返回秒杀品库存恢复结果
+alt  秒杀品库存恢复失败
+    OrderAPPService->OrderAPPService:抛出异常，回滚事务
+    OrderAPPService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+deactivate FlashItemDomainService
+
+activate ItemStockCacheService
+OrderAPPService->ItemStockCacheService:恢复秒杀品预扣中的库存
+ItemStockCacheService->Redis:恢复预扣库存
+ItemStockCacheService-->OrderAPPService:返回库存恢复结果
+deactivate ItemStockCacheService
+alt 秒杀品库存恢复失败
+    OrderAPPService->OrderAPPService:抛出异常，回滚事务
+    OrderAPPService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+OrderAPPService --> Controller:返回应用层订单取消成功结果
+Controller --> User:返回结果给用户
+
+@enduml
+

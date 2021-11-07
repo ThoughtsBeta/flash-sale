@@ -1,0 +1,60 @@
+@startuml
+!include ../../theme/alihealth-uml-theme.iuml
+
+skinparam BoxPadding 15
+skinparam Padding 5
+
+interface "FlashOrderAppService"{
+    AppSingleResult<PlaceOrderResult> placeOrder(token, placeOrderCommand):下单
+    AppSingleResult<OrderTaskHandleResult> getPlaceOrderTaskResult(token, itemId, placeOrderTaskId):获取下单结果
+}
+class DefaultFlashOrderAppService implements FlashOrderAppService{
+    AppSingleResult<PlaceOrderResult> placeOrder(token, placeOrderCommand):下单
+    AppSingleResult<OrderTaskHandleResult> getPlaceOrderTaskResult(token, itemId, placeOrderTaskId):获取下单结果
+}
+
+interface "PlaceOrderService"{
+    PlaceOrderResult placeOrder(userId, placeOrderCommand):下单服务接口
+}
+
+class DefaultPlaceOrderService implements PlaceOrderService {
+    PlaceOrderResult placeOrder(userId, placeOrderCommand):下单服务接口
+}
+Package 缓存模型 <<Frame>> #F2F2F2{
+
+    class QueuedPlaceOrderService implements PlaceOrderService {
+        PlaceOrderResult placeOrder(userId, placeOrderCommand):下单服务接口
+        void handlePlaceOrderTask(placeOrderTask):处理订单任务
+        OrderTaskHandleResult getPlaceOrderResult(userId, itemId, placeOrderTaskId):获取下单任务结果
+    }
+
+    interface PlaceOrderTaskService {
+        OrderTaskSubmitResult submit(placeOrderTask):提交下单任务
+        void updateTaskHandleResult(placeOrderTaskId, boolean result):更新任务处理结果
+        OrderTaskStatus getTaskStatus(placeOrderTaskId):获取任务状态
+    }
+
+    class DefaultPlaceOrderTaskService implements PlaceOrderTaskService {
+        OrderTaskSubmitResult submit(placeOrderTask):提交下单任务
+        void updateTaskHandleResult(placeOrderTaskId, boolean result):更新任务处理结果
+        OrderTaskStatus getTaskStatus(placeOrderTaskId):获取任务状态
+    }
+
+    interface OrderTaskPostService {
+        boolean post(placeOrderTask):投递任务到消息队列
+    }
+    class RocketMQOrderTaskPostService implements OrderTaskPostService {
+        boolean post(placeOrderTask):投递任务到消息队列
+    }
+
+    class RocketMQOrderTaskConsumerService implements RocketMQListener {
+    }
+}
+interface OrderNoGenerateService {}
+interface OrderTaskIdGenerateService {}
+RocketMQOrderTaskConsumerService ..> QueuedPlaceOrderService
+QueuedPlaceOrderService ..> PlaceOrderTaskService
+DefaultPlaceOrderTaskService ..> OrderTaskPostService
+DefaultFlashOrderAppService ..> PlaceOrderService
+
+@enduml

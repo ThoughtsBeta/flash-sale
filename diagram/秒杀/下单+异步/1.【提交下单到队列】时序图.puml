@@ -1,0 +1,91 @@
+@startuml
+!include ../../theme/alihealth-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+skinparam BackgroundColor #F2F2F2
+skinparam responseMessageBelowArrow true
+scale 5500 width
+hide footbox
+
+participant User
+participant Sentinel
+participant Controller
+participant FlashOrderAppService
+participant QueuedPlaceOrderService
+participant PlaceOrderTaskService
+participant OrderTaskPostService
+
+participant DistributedLockFactoryService
+participant Redis
+
+User->Sentinel:限流
+Sentinel->Controller:进入应用服务接口层
+activate Controller
+Controller->FlashOrderAppService:进入应用服务应用层
+
+activate FlashOrderAppService
+activate AuthService
+FlashOrderAppService->AuthService:账号校验
+AuthService-->FlashOrderAppService:返回账号校验结果
+deactivate AuthService
+alt  账号校验未通过
+    FlashOrderAppService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+
+FlashOrderAppService->DistributedLockFactoryService:获取下单锁
+alt 获取锁失败
+    FlashOrderAppService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+FlashOrderAppService->QueuedPlaceOrderService:进入队列下单服务
+
+QueuedPlaceOrderService -> FlashOrderAppService:判断秒杀是否在进行中
+FlashOrderAppService --> QueuedPlaceOrderService:返回判断结果
+alt #EB6070 秒杀已经结束
+    QueuedPlaceOrderService --> FlashOrderAppService:返回下单任务提交失败结果
+end
+QueuedPlaceOrderService -> QueuedPlaceOrderService:生成下单任务和ID
+QueuedPlaceOrderService -> PlaceOrderTaskService:提交下单任务
+group 提交任务到队列
+    activate PlaceOrderTaskService
+    PlaceOrderTaskService -> PlaceOrderTaskService:判断用户此前是否已经提交下单任务
+    alt #EB6070 用户此前已经提交下单任务
+        PlaceOrderTaskService --> QueuedPlaceOrderService:返回下单任务提交失败结果
+    end
+
+    PlaceOrderTaskService -> PlaceOrderTaskService:判断是否还有可用下单许可（orderToken）
+    alt #FFFC79 本地许可余量不存在
+        PlaceOrderTaskService -> Redis:获取最新许可余量
+        Redis --> PlaceOrderTaskService:返回许可余量
+        PlaceOrderTaskService -> PlaceOrderTaskService:写入余量到本地缓存
+    end
+    alt #EB6070 无可用许可
+        PlaceOrderTaskService --> QueuedPlaceOrderService:返回下单任务提交失败结果
+    end
+    PlaceOrderTaskService -> Redis:扣减许可余量（许可余量-1）
+    Redis --> PlaceOrderTaskService:返回扣减结果
+    alt #EB6070 扣减失败
+        PlaceOrderTaskService --> QueuedPlaceOrderService:返回下单任务提交失败结果
+    end
+    QueuedPlaceOrderService -> OrderTaskPostService:提交下单任务
+    OrderTaskPostService --> PlaceOrderTaskService:返回下单任务提交结果
+    alt #EB6070 下单任务提交失败
+        PlaceOrderTaskService -> Redis:恢复扣减许可
+        PlaceOrderTaskService --> QueuedPlaceOrderService:返回下单任务提交失败结果
+    end
+end
+
+QueuedPlaceOrderService->DistributedLockFactoryService:释放下单锁
+
+alt #EB6070 下单任务失败
+    QueuedPlaceOrderService --> Controller:返回下单提交结果，placeOrderTaskId不返回
+else #4FBA90
+    QueuedPlaceOrderService --> Controller:返回下单提交结果，返回placeOrderTaskId
+end
+Controller --> User:返回结果给用户
+@enduml
+

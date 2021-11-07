@@ -1,0 +1,70 @@
+@startuml
+!include ../../theme/alihealth-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+skinparam BackgroundColor #F2F2F2
+scale 5500 width
+hide footbox
+
+participant RocketMQ
+participant RocketMQOrderTaskConsumerService
+participant QueuedPlaceOrderService
+participant PlaceOrderTaskService
+participant FlashActivityDomainService
+participant FlashItemDomainService
+participant PlaceOrderTaskService
+participant FlashOrderDomainService
+
+participant OrderNoGenerateService
+participant RedisCacheService
+
+RocketMQ->RocketMQOrderTaskConsumerService:推送待处理的消息
+RocketMQOrderTaskConsumerService->QueuedPlaceOrderService ++ #FFFC79:接收消息并将消息交由队订单服务处理
+
+activate FlashActivityDomainService
+QueuedPlaceOrderService->FlashActivityDomainService:校验秒杀活动下单规则
+FlashActivityDomainService-->QueuedPlaceOrderService:校验秒杀活动下单规则
+alt #EB6070 秒杀活动规则校验未通过
+    QueuedPlaceOrderService->PlaceOrderTaskService:更新任务处理结果：失败
+end
+deactivate FlashActivityDomainService
+
+activate FlashItemDomainService
+    QueuedPlaceOrderService->FlashItemDomainService:校验秒杀品下单规则
+    FlashItemDomainService-->QueuedPlaceOrderService:校验秒杀品下单规则
+    alt #EB6070 秒杀品规则校验未通过
+        QueuedPlaceOrderService->PlaceOrderTaskService:更新任务处理结果：失败
+    end
+deactivate FlashItemDomainService
+
+QueuedPlaceOrderService->QueuedPlaceOrderService:构建待下单信息
+activate OrderNoGenerateService
+QueuedPlaceOrderService->OrderNoGenerateService:请求生成订单ID
+OrderNoGenerateService-->QueuedPlaceOrderService:返回订单ID
+deactivate OrderNoGenerateService
+
+activate FlashItemDomainService
+QueuedPlaceOrderService->FlashItemDomainService:扣减库存
+FlashItemDomainService-->QueuedPlaceOrderService:返回库存扣减结果
+alt #EB6070 库存扣减失败
+    QueuedPlaceOrderService->PlaceOrderTaskService:更新任务处理结果
+end
+deactivate FlashItemDomainService
+
+activate FlashOrderDomainService
+QueuedPlaceOrderService->FlashOrderDomainService:创建订单
+FlashOrderDomainService-->QueuedPlaceOrderService:返回订单创建结果
+alt #EB6070 订单创建失败
+    QueuedPlaceOrderService->PlaceOrderTaskService:更新任务处理结果：失败
+end
+deactivate FlashOrderDomainService
+
+QueuedPlaceOrderService-[#4FBA90]>PlaceOrderTaskService:更新任务处理结果：成功
+QueuedPlaceOrderService-[#4FBA90]>RedisCacheService:将创建的订单ID保存到缓存
+
+deactivate QueuedPlaceOrderService
+@enduml
+

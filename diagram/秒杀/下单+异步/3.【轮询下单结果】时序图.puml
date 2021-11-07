@@ -1,0 +1,68 @@
+@startuml
+!include ../../theme/alihealth-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+skinparam BackgroundColor #F2F2F2
+skinparam responseMessageBelowArrow true
+scale 5500 width
+hide footbox
+
+participant User
+participant Controller
+participant FlashOrderAppService
+participant QueuedPlaceOrderService
+participant PlaceOrderTaskService
+
+participant RedisCacheService
+
+User->Controller:进入应用服务接口层
+activate Controller
+Controller->FlashOrderAppService:进入应用服务应用层
+
+activate FlashOrderAppService
+activate AuthService
+FlashOrderAppService->AuthService:账号校验
+AuthService-->FlashOrderAppService:返回账号校验结果
+deactivate AuthService
+alt  账号校验未通过
+    FlashOrderAppService --> Controller:返回应用层结果
+    Controller --> User:返回结果给用户
+end
+
+FlashOrderAppService->QueuedPlaceOrderService:进入队列下单服务
+
+activate QueuedPlaceOrderService
+QueuedPlaceOrderService -> QueuedPlaceOrderService:生成placeOrderTaskId
+QueuedPlaceOrderService -> QueuedPlaceOrderService:比对placeOrderTaskId合法性
+alt #EB6070 任务ID不合法
+    QueuedPlaceOrderService --> FlashOrderAppService:返回结果
+end
+activate PlaceOrderTaskService
+QueuedPlaceOrderService -> PlaceOrderTaskService:获取任务状态
+PlaceOrderTaskService --> QueuedPlaceOrderService:返回任务状态
+deactivate PlaceOrderTaskService
+
+alt #EB6070 下单任务不存在
+    QueuedPlaceOrderService --> FlashOrderAppService:返回结果
+end
+alt #EB6070 下单任务处理失败或尚未处理
+    QueuedPlaceOrderService --> FlashOrderAppService:返回结果
+end
+alt  #4FBA90 下单任务处理成功，完成下单
+    QueuedPlaceOrderService -> RedisCacheService:获取订单ID
+    activate RedisCacheService
+    RedisCacheService --> QueuedPlaceOrderService:返回订单ID
+    QueuedPlaceOrderService --> FlashOrderAppService:返回结果订单ID
+    deactivate RedisCacheService
+end
+deactivate QueuedPlaceOrderService
+
+deactivate FlashOrderAppService
+
+FlashOrderAppService --> Controller:返回结果
+Controller --> User:返回结果给用户
+@enduml
+
