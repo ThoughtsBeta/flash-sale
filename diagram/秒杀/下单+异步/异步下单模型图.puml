@@ -17,10 +17,13 @@ interface "PlaceOrderService"{
     PlaceOrderResult placeOrder(userId, placeOrderCommand):下单服务接口
 }
 
-class DefaultPlaceOrderService implements PlaceOrderService {
-    PlaceOrderResult placeOrder(userId, placeOrderCommand):下单服务接口
+Package 同步下单 <<Frame>> #F2F2F2{
+    class DefaultPlaceOrderService implements PlaceOrderService {
+        PlaceOrderResult placeOrder(userId, placeOrderCommand):下单服务接口
+    }
 }
-Package 缓存模型 <<Frame>> #F2F2F2{
+
+Package 异步下单 <<Frame>> #F2F2F2{
 
     class QueuedPlaceOrderService implements PlaceOrderService {
         PlaceOrderResult placeOrder(userId, placeOrderCommand):下单服务接口
