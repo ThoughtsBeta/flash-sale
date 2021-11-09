@@ -26,6 +26,7 @@ import static com.actionworks.flashsale.app.cache.model.CacheConstatants.FIVE_MI
 public class FlashItemsCacheService {
     private final static Logger logger = LoggerFactory.getLogger(FlashItemsCacheService.class);
     private final static Cache<Long, FlashItemsCache> flashItemsLocalCache = CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(5).expireAfterWrite(10, TimeUnit.SECONDS).build();
+    private static final String UPDATE_ITEMS_CACHE_LOCK_KEY = "UPDATE_ITEMS_CACHE_LOCK_KEY_";
 
     @Resource
     private DistributedCacheService distributedCacheService;
@@ -63,7 +64,7 @@ public class FlashItemsCacheService {
     }
 
     public FlashItemsCache tryToUpdateItemsCacheByLock(Long activityId) {
-        DistributedLock lock = distributedLockFactoryService.getDistributedLock("UPDATE_ITEMS_CACHE_LOCK");
+        DistributedLock lock = distributedLockFactoryService.getDistributedLock(UPDATE_ITEMS_CACHE_LOCK_KEY + activityId);
         try {
             boolean isLockSuccess = lock.tryLock(1, 5, TimeUnit.SECONDS);
             if (!isLockSuccess) {

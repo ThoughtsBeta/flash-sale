@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class DefaultItemStockCacheService implements ItemStockCacheService {
-    public static final int IN_STOCK_ALIGNING = -9;
+    private static final int IN_STOCK_ALIGNING = -9;
     private static final String INIT_ITEM_STOCK_LUA;
     private static final String INCREASE_ITEM_STOCK_LUA;
     private static final String DECREASE_ITEM_STOCK_LUA;
