@@ -50,16 +50,16 @@ public class FlashActivitiesCacheService {
                 return flashActivityCache;
             }
             if (version > (flashActivityCache.getVersion())) {
-                return tryToUpdateActivitiesCacheByLock(pageNumber);
+                return getLatestDistributedCache(pageNumber);
             }
         }
+        return getLatestDistributedCache(pageNumber);
+    }
+
+    private FlashActivitiesCache getLatestDistributedCache(Integer pageNumber) {
         FlashActivitiesCache distributedCachedFlashActivity = distributedCacheService.getObject(buildActivityCacheKey(pageNumber), FlashActivitiesCache.class);
         if (distributedCachedFlashActivity == null) {
-            distributedCachedFlashActivity = tryToUpdateActivitiesCacheByLock(pageNumber);
-        }
-        if (distributedCachedFlashActivity.isExist()) {
-            flashActivitiesLocalCache.put(pageNumber, distributedCachedFlashActivity);
-            logger.info("Activity local cache was updated:{}", pageNumber);
+            return tryToUpdateActivitiesCacheByLock(pageNumber);
         }
         return distributedCachedFlashActivity;
     }
