@@ -49,16 +49,16 @@ public class FlashItemsCacheService {
                 return flashItemCache;
             }
             if (version > (flashItemCache.getVersion())) {
-                return tryToUpdateItemsCacheByLock(activityId);
+                return getLatestDistributedCache(activityId);
             }
         }
+        return getLatestDistributedCache(activityId);
+    }
+
+    private FlashItemsCache getLatestDistributedCache(Long activityId) {
         FlashItemsCache distributedCachedFlashItem = distributedCacheService.getObject(buildItemCacheKey(activityId), FlashItemsCache.class);
         if (distributedCachedFlashItem == null) {
-            distributedCachedFlashItem = tryToUpdateItemsCacheByLock(activityId);
-        }
-        if (distributedCachedFlashItem.isExist()) {
-            flashItemsLocalCache.put(activityId, distributedCachedFlashItem);
-            logger.info("Item local cache was updated:{}", activityId);
+            return tryToUpdateItemsCacheByLock(activityId);
         }
         return distributedCachedFlashItem;
     }
