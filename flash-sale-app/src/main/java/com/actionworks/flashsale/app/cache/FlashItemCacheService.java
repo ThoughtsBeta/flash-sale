@@ -46,16 +46,16 @@ public class FlashItemCacheService {
                 return flashItemCache;
             }
             if (version > (flashItemCache.getVersion())) {
-                return tryToUpdateItemCacheByLock(itemId);
+                return getLatestDistributedCache(itemId);
             }
         }
+        return getLatestDistributedCache(itemId);
+    }
+
+    private FlashItemCache getLatestDistributedCache(Long itemId) {
         FlashItemCache distributedCachedFlashItem = distributedCacheService.getObject(buildItemCacheKey(itemId), FlashItemCache.class);
         if (distributedCachedFlashItem == null) {
-            distributedCachedFlashItem = tryToUpdateItemCacheByLock(itemId);
-        }
-        if (!distributedCachedFlashItem.isLater()) {
-            flashItemLocalCache.put(itemId, distributedCachedFlashItem);
-            logger.info("Item local cache was updated:{}", itemId);
+            return tryToUpdateItemCacheByLock(itemId);
         }
         return distributedCachedFlashItem;
     }
