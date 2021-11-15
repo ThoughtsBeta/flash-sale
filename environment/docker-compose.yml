@@ -13,7 +13,6 @@ services:
     volumes:
     - ./data/db_data:/var/lib/mysql
     - ./config/mysql/init:/docker-entrypoint-initdb.d/
-    restart: always
     command: [
       '--character-set-server=utf8mb4',
       '--collation-server=utf8mb4_unicode_ci',
@@ -51,7 +50,6 @@ services:
     container_name: redis-commander
     hostname: redis-commander
     image: rediscommander/redis-commander:latest
-    restart: always
     environment:
     - REDIS_HOSTS=local:redis:6379
     ports:
@@ -133,7 +131,6 @@ services:
     image: grafana/grafana
     container_name: grafana
     hostname: grafana
-    restart: always
     environment:
     - GF_INSTALL_PLUGINS=redis-app
     - GF_INSTALL_PLUGINS=redis-datasource
@@ -146,10 +143,10 @@ services:
     - redis:redis
     networks:
     - thoughts-beta-network
-  namesrv:
+
+  rmqnamesrv:
     image: apacherocketmq/rocketmq:4.5.0
     container_name: rmqnamesrv
-    restart: always
     ports:
     - 9876:9876
     volumes:
@@ -162,7 +159,6 @@ services:
   rmqbroker:
     image: apacherocketmq/rocketmq:4.5.0
     container_name: rmqbroker
-    restart: always
     ports:
     - 10909:10909
     - 10911:10911
@@ -171,25 +167,81 @@ services:
     - ./data/rocketmq/logs:/home/rocketmq/logs
     - ./data/rocketmq/store:/home/rocketmq/store
     - ./config/rocketmq/broker.conf:/home/rocketmq/rocketmq-4.5.0/conf/broker.conf
-    command: sh mqbroker -n namesrv:9876 -c ../conf/broker.conf
+    command: sh mqbroker -n rmqnamesrv:9876 -c ../conf/broker.conf
     depends_on:
-    - namesrv
+    - rmqnamesrv
     environment:
     - JAVA_HOME=/usr/lib/jvm/jre
     networks:
     - thoughts-beta-network
   rmqconsole:
-    image: apacherocketmq/rocketmq-console:2.0.0
+    image: styletang/rocketmq-console-ng:latest
     container_name: rocketmq-console
-    restart: always
     ports:
     - 8076:8080
     depends_on:
-    - namesrv
+    - rmqnamesrv
     environment:
-    - JAVA_OPTS= -Dlogging.level.root=info   -Drocketmq.namesrv.addr=rmqnamesrv:9876
+    - JAVA_OPTS= -Dlogging.level.root=info  -Drocketmq.namesrv.addr=rmqnamesrv:9876
     - Dcom.rocketmq.sendMessageWithVIPChannel=false
     networks:
     - thoughts-beta-network
+
+  elasticsearch:
+    image: elasticsearch:7.14.2
+    container_name: elasticsearch
+    volumes:
+    - type: bind
+      source: ./config/elk/elasticsearch.yml
+      target: /usr/share/elasticsearch/config/elasticsearch.yml
+      read_only: true
+    ports:
+    - "9200:9200"
+    - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      discovery.type: single-node
+    networks:
+    - thoughts-beta-network
+
+  logstash:
+    image: logstash:7.14.2
+    container_name: logstash
+    volumes:
+    - type: bind
+      source: ./config/elk/logstash.yml
+      target: /usr/share/logstash/config/logstash.yml
+      read_only: true
+    - type: bind
+      source: ./config/elk/pipeline
+      target: /usr/share/logstash/pipeline
+      read_only: true
+    ports:
+    - "5044:5044"
+    - "5000:5000/tcp"
+    - "5000:5000/udp"
+    - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+    - thoughts-beta-network
+    depends_on:
+    - elasticsearch
+
+  kibana:
+    image: kibana:7.14.2
+    container_name: kibana
+    volumes:
+    - type: bind
+      source: ./config/elk/kibana.yml
+      target: /usr/share/kibana/config/kibana.yml
+      read_only: true
+    ports:
+    - "5601:5601"
+    networks:
+    - thoughts-beta-network
+    depends_on:
+    - elasticsearch
+
 
 
