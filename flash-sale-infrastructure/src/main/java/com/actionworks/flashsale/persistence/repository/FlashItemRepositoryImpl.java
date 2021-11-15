@@ -22,9 +22,7 @@ public class FlashItemRepositoryImpl implements FlashItemRepository {
     public int save(FlashItem flashItem) {
         FlashItemDO flashItemDO = FlashItemBuilder.toDataObjectForCreate(flashItem);
         if (flashItem.getId() == null) {
-            int effectedRows = flashItemMapper.insert(flashItemDO);
-            flashItem.setId(flashItemDO.getId());
-            return effectedRows;
+            return flashItemMapper.insert(flashItemDO);
         }
         return flashItemMapper.update(flashItemDO);
     }

@@ -45,6 +45,7 @@ import static com.actionworks.flashsale.controller.exception.ErrorCode.INVALID_T
 @Service
 public class DefaultFlashOrderAppService implements FlashOrderAppService {
     private static final Logger logger = LoggerFactory.getLogger(DefaultFlashOrderAppService.class);
+    private static final String PLACE_ORDER = "PLACE_ORDER_";
 
     @Resource
     private FlashOrderDomainService flashOrderDomainService;
@@ -69,7 +70,7 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
         if (!authResult.isSuccess()) {
             throw new AuthException(INVALID_TOKEN);
         }
-        String placeOrderLockKey = "PLACE_ORDER_" + authResult.getUserId();
+        String placeOrderLockKey = getPlaceOrderLockKey(authResult);
         DistributedLock placeOrderLock = lockFactoryService.getDistributedLock(placeOrderLockKey);
         try {
             boolean isLockSuccess = placeOrderLock.tryLock(5, 5, TimeUnit.SECONDS);
@@ -78,16 +79,17 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
             }
             boolean isPassRiskInspect = securityService.inspectRisksByPolicy(authResult.getUserId());
             if (!isPassRiskInspect) {
-                logger.info("placeOrder|综合风控检验未通过:{}", authResult.getUserId());
+                logger.info("placeOrder|综合风控检验未通过|{}", authResult.getUserId());
                 return AppSingleResult.failed(PLACE_ORDER_FAILED);
             }
-            PlaceOrderResult placeOrderResult = placeOrderService.placeOrder(authResult.getUserId(), placeOrderCommand);
+            PlaceOrderResult placeOrderResult = placeOrderService.doPlaceOrder(authResult.getUserId(), placeOrderCommand);
             if (!placeOrderResult.isSuccess()) {
                 return AppSingleResult.failed(placeOrderResult.getCode(), placeOrderResult.getMessage());
             }
+            logger.info("placeOrder|下单完成|{}", authResult.getUserId());
             return AppSingleResult.ok(placeOrderResult);
         } catch (Exception e) {
-            logger.error("placeOrder|下单失败:{},{}", authResult.getUserId(), JSON.toJSONString(placeOrderCommand), e);
+            logger.error("placeOrder|下单失败|{},{}", authResult.getUserId(), JSON.toJSONString(placeOrderCommand), e);
             return AppSingleResult.failed(PLACE_ORDER_FAILED);
         } finally {
             placeOrderLock.forceUnlock();
@@ -127,6 +129,7 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
     @Override
     @Transactional
     public AppResult cancelOrder(String token, Long orderId) {
+        logger.info("cancelOrder|取消订单|{},{}", token, orderId);
         AuthResult authResult = authorizationService.auth(token);
         if (!authResult.isSuccess()) {
             throw new AuthException(INVALID_TOKEN);
@@ -137,19 +140,24 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
         }
         boolean cancelSuccess = flashOrderDomainService.cancelOrder(authResult.getUserId(), orderId);
         if (!cancelSuccess) {
-            logger.info("cancelOrder|订单取消失败:{},{}", authResult.getUserId(), orderId);
+            logger.info("cancelOrder|订单取消失败|{}", orderId);
             return AppResult.buildFailure(ORDER_CANCEL_FAILED);
         }
         boolean stockRecoverSuccess = flashItemDomainService.increaseItemStock(flashOrder.getItemId(), flashOrder.getQuantity());
         if (!stockRecoverSuccess) {
-            logger.info("cancelOrder|库存恢复失败:{},{}", authResult.getUserId(), orderId);
+            logger.info("cancelOrder|库存恢复失败|{}", orderId);
             throw new BizException(ORDER_CANCEL_FAILED.getErrDesc());
         }
         boolean stockInRedisRecoverSuccess = itemStockCacheService.increaseItemStock(authResult.getUserId(), flashOrder.getItemId(), flashOrder.getQuantity());
         if (!stockInRedisRecoverSuccess) {
-            logger.info("cancelOrder|Redis库存恢复失败:{},{}", authResult.getUserId(), orderId);
+            logger.info("cancelOrder|Redis库存恢复失败|{}", orderId);
             throw new BizException(ORDER_CANCEL_FAILED.getErrDesc());
         }
+        logger.info("cancelOrder|订单取消成功|{}", orderId);
         return AppResult.buildSuccess();
+    }
+
+    private String getPlaceOrderLockKey(AuthResult authResult) {
+        return PLACE_ORDER + authResult.getUserId();
     }
 }

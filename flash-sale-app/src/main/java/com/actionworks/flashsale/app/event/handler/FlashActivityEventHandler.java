@@ -3,6 +3,7 @@ package com.actionworks.flashsale.app.event.handler;
 
 import com.actionworks.flashsale.app.cache.FlashActivitiesCacheService;
 import com.actionworks.flashsale.app.cache.FlashActivityCacheService;
+import com.actionworks.flashsale.config.annotion.BetaTrace;
 import com.actionworks.flashsale.domain.event.FlashActivityEvent;
 import com.alibaba.cola.dto.Response;
 import com.alibaba.cola.event.EventHandler;
@@ -23,10 +24,11 @@ public class FlashActivityEventHandler implements EventHandlerI<Response, FlashA
     private FlashActivitiesCacheService flashActivitiesCacheService;
 
     @Override
+    @BetaTrace
     public Response execute(FlashActivityEvent flashActivityEvent) {
-        logger.info("Receiving activity event: " + JSON.toJSON(flashActivityEvent));
+        logger.info("activityEvent|接收活动事件|{}", JSON.toJSON(flashActivityEvent));
         if (flashActivityEvent.getId() == null) {
-            logger.info("Received activity event params invalid: " + JSON.toJSON(flashActivityEvent));
+            logger.info("activityEvent|事件参数错误|{}");
             return Response.buildSuccess();
         }
 

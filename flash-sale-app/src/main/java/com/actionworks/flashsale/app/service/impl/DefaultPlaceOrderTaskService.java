@@ -10,6 +10,7 @@ import com.actionworks.flashsale.app.service.PlaceOrderTaskService;
 import com.actionworks.flashsale.cache.redis.RedisCacheService;
 import com.actionworks.flashsale.lock.DistributedLock;
 import com.actionworks.flashsale.lock.DistributedLockFactoryService;
+import com.alibaba.fastjson.JSON;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.commons.lang3.StringUtils;
@@ -40,6 +41,7 @@ public class DefaultPlaceOrderTaskService implements PlaceOrderTaskService {
     private static final String RECOVER_ORDER_TOKEN_LUA;
     private static final String PLACE_ORDER_TASK_ID_KEY = "PLACE_ORDER_TASK_ID_KEY_";
     private static final String PLACE_ORDER_TASK_AVAILABLE_TOKENS_KEY = "PLACE_ORDER_TASK_AVAILABLE_TOKENS_KEY_";
+    public static final String LOCK_REFRESH_LATEST_AVAILABLE_TOKENS_KEY = "LOCK_REFRESH_LATEST_AVAILABLE_TOKENS_KEY_";
 
     static {
         TAKE_ORDER_TOKEN_LUA = "if (redis.call('exists', KEYS[1]) == 1) then" +
@@ -71,6 +73,7 @@ public class DefaultPlaceOrderTaskService implements PlaceOrderTaskService {
 
     @Override
     public OrderTaskSubmitResult submit(PlaceOrderTask placeOrderTask) {
+        logger.info("submitOrderTask|提交下单任务|{}", JSON.toJSONString(placeOrderTask));
         if (placeOrderTask == null) {
             return OrderTaskSubmitResult.failed(INVALID_PARAMS);
         }
@@ -85,14 +88,17 @@ public class DefaultPlaceOrderTaskService implements PlaceOrderTaskService {
         }
 
         if (!takeOrRecoverToken(placeOrderTask, TAKE_ORDER_TOKEN_LUA)) {
+            logger.info("submitOrderTask|库存扣减失败|{},{}", placeOrderTask.getUserId(), placeOrderTask.getPlaceOrderTaskId());
             return OrderTaskSubmitResult.failed(ORDER_TOKENS_NOT_AVAILABLE);
         }
         boolean postSuccess = orderTaskPostService.post(placeOrderTask);
         if (!postSuccess) {
             takeOrRecoverToken(placeOrderTask, RECOVER_ORDER_TOKEN_LUA);
+            logger.info("submitOrderTask|下单任务提交失败|{},{}", placeOrderTask.getUserId(), placeOrderTask.getPlaceOrderTaskId());
             return OrderTaskSubmitResult.failed(ORDER_TASK_SUBMIT_FAILED);
         }
         redisCacheService.put(taskKey, 0, HOURS_24);
+        logger.info("submitOrderTask|下单任务提交成功|{},{}", placeOrderTask.getUserId(), placeOrderTask.getPlaceOrderTaskId());
         return OrderTaskSubmitResult.ok();
     }
 
@@ -161,7 +167,7 @@ public class DefaultPlaceOrderTaskService implements PlaceOrderTaskService {
     }
 
     private Integer refreshLatestAvailableTokens(Long itemId) {
-        DistributedLock refreshTokenLock = lockFactoryService.getDistributedLock("LOCK_REFRESH_LATEST_AVAILABLE_TOKENS_KEY_" + itemId);
+        DistributedLock refreshTokenLock = lockFactoryService.getDistributedLock(getRefreshTokensLockKey(itemId));
         try {
             boolean isLockSuccess = refreshTokenLock.tryLock(500, 1000, TimeUnit.MILLISECONDS);
             if (!isLockSuccess) {
@@ -175,11 +181,15 @@ public class DefaultPlaceOrderTaskService implements PlaceOrderTaskService {
                 return latestAvailableOrderTokens;
             }
         } catch (Exception e) {
-            logger.error("Refresh latest available tokens failed:{}.", itemId, e);
+            logger.error("refreshAvailableTokens|刷新tokens失败|{}", itemId, e);
         } finally {
             refreshTokenLock.forceUnlock();
         }
         return null;
+    }
+
+    private String getRefreshTokensLockKey(Long itemId) {
+        return LOCK_REFRESH_LATEST_AVAILABLE_TOKENS_KEY + itemId;
     }
 
     private String getItemAvailableTokensKey(Long itemId) {

@@ -41,19 +41,20 @@ public class DefaultPlaceOrderService implements PlaceOrderService {
 
     @PostConstruct
     public void init() {
-        logger.info("Default place order service init.");
+        logger.info("initPlaceOrderService|默认下单服务已经初始化");
     }
 
     @Override
-    public PlaceOrderResult placeOrder(Long userId, FlashPlaceOrderCommand placeOrderCommand) {
+    public PlaceOrderResult doPlaceOrder(Long userId, FlashPlaceOrderCommand placeOrderCommand) {
+        logger.info("placeOrder|开始下单|{},{}", userId, JSON.toJSONString(placeOrderCommand));
         boolean isActivityAllowPlaceOrder = flashActivityDomainService.isAllowPlaceOrderOrNot(placeOrderCommand.getActivityId());
         if (!isActivityAllowPlaceOrder) {
-            logger.info("placeOrder|秒杀活动下单规则校验未通过:{}", userId, placeOrderCommand.getActivityId());
+            logger.info("placeOrder|秒杀活动下单规则校验未通过|{},{}", userId, placeOrderCommand.getActivityId());
             return PlaceOrderResult.failed(PLACE_ORDER_FAILED);
         }
         boolean isItemAllowPlaceOrder = flashItemDomainService.isAllowPlaceOrderOrNot(placeOrderCommand.getItemId());
         if (!isItemAllowPlaceOrder) {
-            logger.info("placeOrder|秒杀品下单规则校验未通过:{}", userId, placeOrderCommand.getActivityId());
+            logger.info("placeOrder|秒杀品下单规则校验未通过|{},{}", userId, placeOrderCommand.getActivityId());
             return PlaceOrderResult.failed(PLACE_ORDER_FAILED);
         }
         FlashItem flashItem = flashItemDomainService.getFlashItem(placeOrderCommand.getItemId());
@@ -69,12 +70,12 @@ public class DefaultPlaceOrderService implements PlaceOrderService {
         try {
             preDecreaseStockSuccess = itemStockCacheService.decreaseItemStock(userId, placeOrderCommand.getItemId(), placeOrderCommand.getQuantity());
             if (!preDecreaseStockSuccess) {
-                logger.info("placeOrder|库存预扣减失败:{},{}", userId, JSON.toJSONString(placeOrderCommand));
+                logger.info("placeOrder|库存预扣减失败|{},{}", userId, JSON.toJSONString(placeOrderCommand));
                 return PlaceOrderResult.failed(PLACE_ORDER_FAILED.getErrCode(), PLACE_ORDER_FAILED.getErrDesc());
             }
             boolean decreaseStockSuccess = flashItemDomainService.decreaseItemStock(placeOrderCommand.getItemId(), placeOrderCommand.getQuantity());
             if (!decreaseStockSuccess) {
-                logger.info("placeOrder|库存扣减失败:{},{}", userId, JSON.toJSONString(placeOrderCommand));
+                logger.info("placeOrder|库存扣减失败|{},{}", userId, JSON.toJSONString(placeOrderCommand));
                 return PlaceOrderResult.failed(PLACE_ORDER_FAILED.getErrCode(), PLACE_ORDER_FAILED.getErrDesc());
             }
             boolean placeOrderSuccess = flashOrderDomainService.placeOrder(userId, flashOrderToPlace);
@@ -85,12 +86,13 @@ public class DefaultPlaceOrderService implements PlaceOrderService {
             if (preDecreaseStockSuccess) {
                 boolean recoverStockSuccess = itemStockCacheService.increaseItemStock(userId, placeOrderCommand.getItemId(), placeOrderCommand.getQuantity());
                 if (!recoverStockSuccess) {
-                    logger.error("placeOrder|预扣库存恢复失败:{},{}", userId, JSON.toJSONString(placeOrderCommand), e);
+                    logger.error("placeOrder|预扣库存恢复失败|{},{}", userId, JSON.toJSONString(placeOrderCommand), e);
                 }
             }
-            logger.error("placeOrder|下单失败:{},{}", userId, JSON.toJSONString(placeOrderCommand), e);
+            logger.error("placeOrder|下单失败|{},{}", userId, JSON.toJSONString(placeOrderCommand), e);
             throw new BizException(PLACE_ORDER_FAILED.getErrDesc());
         }
+        logger.error("placeOrder|下单成功|{},{}", userId, orderId);
         return PlaceOrderResult.ok(orderId);
     }
 }

@@ -10,6 +10,7 @@ import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.model.enums.FlashItemStatus;
 import com.actionworks.flashsale.domain.repository.FlashItemRepository;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
+import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -34,23 +35,24 @@ public class FlashItemDomainServiceImpl implements FlashItemDomainService {
 
     @Override
     public void publishFlashItem(FlashItem flashItem) {
-        logger.info("Preparing to publish flash item:{}", flashItem);
+        logger.info("itemPublish|发布秒杀品|{}", JSON.toJSON(flashItem));
         if (flashItem == null || !flashItem.validateParamsForCreate()) {
             throw new DomainException(ONLINE_FLASH_ITEM_PARAMS_INVALID);
         }
         flashItem.setStatus(FlashItemStatus.PUBLISHED.getCode());
         flashItemRepository.save(flashItem);
-        logger.info("Flash item was created:{}", flashItem.getId());
+        logger.info("itemPublish|秒杀品已发布|{}", flashItem.getId());
 
         FlashItemEvent flashItemEvent = new FlashItemEvent();
         flashItemEvent.setEventType(FlashItemEventType.PUBLISHED);
         flashItemEvent.setFlashItem(flashItem);
         domainEventPublisher.publish(flashItemEvent);
+        logger.info("itemPublish|秒杀品发布事件已发布|{}", flashItem.getId());
     }
 
     @Override
     public void onlineFlashItem(Long itemId) {
-        logger.info("Preparing to online flash item:{},{}", itemId);
+        logger.info("itemOnline|上线秒杀品|{}", itemId);
         if (itemId == null) {
             throw new DomainException(PARAMS_INVALID);
         }
@@ -64,17 +66,18 @@ public class FlashItemDomainServiceImpl implements FlashItemDomainService {
         }
         flashItem.setStatus(FlashItemStatus.ONLINE.getCode());
         flashItemRepository.save(flashItem);
-        logger.info("Flash item was online:{}", itemId);
+        logger.info("itemOnline|秒杀品已上线|{}", itemId);
 
         FlashItemEvent flashItemPublishEvent = new FlashItemEvent();
         flashItemPublishEvent.setEventType(FlashItemEventType.ONLINE);
         flashItemPublishEvent.setFlashItem(flashItem);
         domainEventPublisher.publish(flashItemPublishEvent);
+        logger.info("itemOnline|秒杀品上线事件已发布|{}", itemId);
     }
 
     @Override
     public void offlineFlashItem(Long itemId) {
-        logger.info("Preparing to offline flash item:{},{}", itemId);
+        logger.info("itemOffline|下线秒杀品|{}", itemId);
         if (itemId == null) {
             throw new DomainException(PARAMS_INVALID);
         }
@@ -88,12 +91,13 @@ public class FlashItemDomainServiceImpl implements FlashItemDomainService {
         }
         flashItem.setStatus(FlashItemStatus.OFFLINE.getCode());
         flashItemRepository.save(flashItem);
-        logger.info("Flash item was offline:{}", itemId);
+        logger.info("itemOffline|秒杀品已下线|{}", itemId);
 
         FlashItemEvent flashItemEvent = new FlashItemEvent();
         flashItemEvent.setEventType(FlashItemEventType.OFFLINE);
         flashItemEvent.setFlashItem(flashItem);
         domainEventPublisher.publish(flashItemEvent);
+        logger.info("itemOffline|秒杀品下线事件已发布|{}", itemId);
     }
 
     @Override
@@ -139,16 +143,16 @@ public class FlashItemDomainServiceImpl implements FlashItemDomainService {
     public boolean isAllowPlaceOrderOrNot(Long itemId) {
         Optional<FlashItem> flashItemOptional = flashItemRepository.findById(itemId);
         if (!flashItemOptional.isPresent()) {
-            logger.info("isAllowPlaceOrderOrNot|秒杀品不存在:{}", itemId);
+            logger.info("isAllowPlaceOrderOrNot|秒杀品不存在|{}", itemId);
             return false;
         }
         FlashItem flashItem = flashItemOptional.get();
         if (!flashItem.isOnline()) {
-            logger.info("isAllowPlaceOrderOrNot|秒杀品尚未上线:{}", itemId);
+            logger.info("isAllowPlaceOrderOrNot|秒杀品尚未上线|{}", itemId);
             return false;
         }
         if (!flashItem.isInProgress()) {
-            logger.info("isAllowPlaceOrderOrNot|当前非秒杀时段:{}", itemId);
+            logger.info("isAllowPlaceOrderOrNot|当前非秒杀时段|{}", itemId);
             return false;
         }
         return true;

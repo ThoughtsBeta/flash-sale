@@ -23,7 +23,7 @@ public class InternalExceptionHandler extends ResponseEntityExceptionHandler {
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         exceptionResponse.setErrorCode(INTERNAL_ERROR.getCode());
         exceptionResponse.setErrorMessage(INTERNAL_ERROR.getDesc());
-        logger.error("Internal error occurred:{}", ex.getMessage(), ex);
+        logger.error("unknownError|未知错误|{},{}", ex.getMessage(), ex);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         return handleExceptionInternal(ex, JSON.toJSONString(exceptionResponse), httpHeaders

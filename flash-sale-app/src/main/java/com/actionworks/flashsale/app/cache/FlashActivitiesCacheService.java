@@ -25,6 +25,7 @@ import static com.actionworks.flashsale.app.cache.model.CacheConstatants.FIVE_MI
 public class FlashActivitiesCacheService {
     private final static Logger logger = LoggerFactory.getLogger(FlashActivitiesCacheService.class);
     private final static Cache<Integer, FlashActivitiesCache> flashActivitiesLocalCache = CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(5).expireAfterWrite(10, TimeUnit.SECONDS).build();
+    private static final String UPDATE_ACTIVITIES_CACHE_LOCK_KEY = "UPDATE_ACTIVITIES_CACHE_LOCK_KEY";
 
     @Resource
     private DistributedCacheService distributedCacheService;
@@ -42,11 +43,11 @@ public class FlashActivitiesCacheService {
         FlashActivitiesCache flashActivityCache = flashActivitiesLocalCache.getIfPresent(pageNumber);
         if (flashActivityCache != null) {
             if (version == null) {
-                logger.info("Activities local cache was hit {}", pageNumber);
+                logger.info("activitiesCache|命中本地缓存|{}", pageNumber);
                 return flashActivityCache;
             }
             if (version.equals(flashActivityCache.getVersion()) || version < flashActivityCache.getVersion()) {
-                logger.info("Activity local cache was hit {},{}", pageNumber, version);
+                logger.info("activitiesCache|命中本地缓存|{},{}", pageNumber, version);
                 return flashActivityCache;
             }
             if (version > (flashActivityCache.getVersion())) {
@@ -57,6 +58,7 @@ public class FlashActivitiesCacheService {
     }
 
     private FlashActivitiesCache getLatestDistributedCache(Integer pageNumber) {
+        logger.info("activitiesCache|读取远程缓存|{}", pageNumber);
         FlashActivitiesCache distributedCachedFlashActivity = distributedCacheService.getObject(buildActivityCacheKey(pageNumber), FlashActivitiesCache.class);
         if (distributedCachedFlashActivity == null) {
             return tryToUpdateActivitiesCacheByLock(pageNumber);
@@ -65,7 +67,8 @@ public class FlashActivitiesCacheService {
     }
 
     public FlashActivitiesCache tryToUpdateActivitiesCacheByLock(Integer pageNumber) {
-        DistributedLock lock = distributedLockFactoryService.getDistributedLock("UPDATE_ACTIVITIES_CACHE_LOCK");
+        logger.info("activitiesCache|更新远程缓存|{}", pageNumber);
+        DistributedLock lock = distributedLockFactoryService.getDistributedLock(UPDATE_ACTIVITIES_CACHE_LOCK_KEY);
         try {
             boolean isLockSuccess = lock.tryLock(1, 5, TimeUnit.SECONDS);
             if (!isLockSuccess) {
@@ -81,13 +84,13 @@ public class FlashActivitiesCacheService {
                     .setFlashActivities(flashActivityPageResult.getData())
                     .setVersion(System.currentTimeMillis());
             distributedCacheService.put(buildActivityCacheKey(pageNumber), JSON.toJSONString(flashActivityCache), FIVE_MINUTES);
-            logger.info("Activities distributed cache was updated:{}", pageNumber);
+            logger.info("activitiesCache|远程缓存已更新|{}", pageNumber);
 
             flashActivitiesLocalCache.put(pageNumber, flashActivityCache);
-            logger.info("Activities local cache was updated:{}", pageNumber);
+            logger.info("activitiesCache|本地缓存已更新|{}", pageNumber);
             return flashActivityCache;
         } catch (InterruptedException e) {
-            logger.warn("UPDATE_ACTIVITIES_CACHE_LOCK was interrupted.", e);
+            logger.error("activitiesCache|远程缓存更新失败", e);
             return new FlashActivitiesCache().tryLater();
         } finally {
             lock.forceUnlock();

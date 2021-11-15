@@ -19,6 +19,4 @@ public interface FlashActivityAppService {
     AppResult onlineFlashActivity(String token, Long activityId);
 
     AppResult offlineFlashActivity(String token, Long activityId);
-
-    AppSingleResult<FlashActivityDTO> getFlashActivity(Long activityId);
 }

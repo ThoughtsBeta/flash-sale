@@ -1,6 +1,7 @@
 package com.actionworks.flashsale.app.scheduler;
 
 import com.actionworks.flashsale.app.cache.ItemStockCacheService;
+import com.actionworks.flashsale.config.annotion.BetaTrace;
 import com.actionworks.flashsale.domain.model.PageResult;
 import com.actionworks.flashsale.domain.model.PagesQueryCondition;
 import com.actionworks.flashsale.domain.model.entity.FlashItem;
@@ -27,6 +28,7 @@ public class StocksAlignScheduler {
 
     @Scheduled(cron = "*/2 * * * * ?")
     @SchedulerLock(name = "alignStocksTask")
+    @BetaTrace
     public void alignStocksTask() {
         logger.info("alignStocksTask|校准库存缓存开始");
         PagesQueryCondition pagesQueryCondition = new PagesQueryCondition();

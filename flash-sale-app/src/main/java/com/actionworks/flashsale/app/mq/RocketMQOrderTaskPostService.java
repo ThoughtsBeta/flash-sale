@@ -36,15 +36,16 @@ public class RocketMQOrderTaskPostService implements OrderTaskPostService {
             placeOrderMQProducer = new DefaultMQProducer(producerGroup);
             placeOrderMQProducer.setNamesrvAddr(nameServer);
             placeOrderMQProducer.start();
-            logger.info("Place order task producer started successfully.");
+            logger.info("initOrderTaskProducer|下单任务生产者初始化成功|{},{},{}", nameServer, producerGroup, placeOrderTopic);
         } catch (Exception e) {
-            logger.error("Place order task producer start failed.", e);
+            logger.error("initOrderTaskProducer|下单任务生产者初始化失败|{},{},{}", nameServer, producerGroup, placeOrderTopic, e);
         }
     }
 
     public boolean post(PlaceOrderTask placeOrderTask) {
+        logger.info("postOrderTask|投递下单任务|{}", JSON.toJSONString(placeOrderTask));
         if (placeOrderTask == null) {
-            logger.info("PlaceOrder task message params invalid:{},{}", JSON.toJSON(placeOrderTask));
+            logger.info("postOrderTask|投递下单任务参数错误");
             return false;
         }
         String placeOrderTaskString = JSON.toJSONString(placeOrderTask);
@@ -53,15 +54,16 @@ public class RocketMQOrderTaskPostService implements OrderTaskPostService {
         message.setBody(placeOrderTaskString.getBytes());
         try {
             SendResult sendResult = placeOrderMQProducer.send(message);
+            logger.info("postOrderTask|下单任务投递完成|{}", placeOrderTask.getPlaceOrderTaskId(), JSON.toJSONString(sendResult));
             if (SendStatus.SEND_OK.equals(sendResult.getSendStatus())) {
-                logger.info("PlaceOrder task  message sent successfully:{}", sendResult.getMsgId());
+                logger.info("postOrderTask|下单任务投递成功|{}", placeOrderTask.getPlaceOrderTaskId());
                 return true;
             } else {
-                logger.info("PlaceOrder task  message sent failed:{},{}", placeOrderTaskString, JSON.toJSONString(sendResult));
+                logger.info("postOrderTask|下单任务投递失败|{}", placeOrderTask.getPlaceOrderTaskId());
                 return false;
             }
         } catch (Exception e) {
-            logger.error("PlaceOrder task  message sent failed:{},{}", placeOrderTaskString, e);
+            logger.error("postOrderTask|下单任务投递错误|{}", placeOrderTask.getPlaceOrderTaskId(), e);
             return false;
         }
     }

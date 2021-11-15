@@ -26,9 +26,9 @@ public class FlashItemEventHandler implements EventHandlerI<Response, FlashItemE
 
     @Override
     public Response execute(FlashItemEvent flashItemEvent) {
-        logger.info("Receiving item event: " + JSON.toJSON(flashItemEvent));
+        logger.info("itemEvent|接收秒杀品事件|{}", JSON.toJSON(flashItemEvent));
         if (flashItemEvent.getId() == null) {
-            logger.info("Received item event params invalid: " + JSON.toJSON(flashItemEvent));
+            logger.info("itemEvent|秒杀品事件参数错误");
             return Response.buildSuccess();
         }
 

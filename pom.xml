@@ -113,6 +113,11 @@
                 <artifactId>sentinel-datasource-nacos</artifactId>
                 <version>1.8.1</version>
             </dependency>
+            <dependency>
+                <groupId>net.logstash.logback</groupId>
+                <artifactId>logstash-logback-encoder</artifactId>
+                <version>5.1</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

@@ -41,11 +41,11 @@ public class FlashItemsCacheService {
         FlashItemsCache flashItemCache = flashItemsLocalCache.getIfPresent(activityId);
         if (flashItemCache != null) {
             if (version == null) {
-                logger.info("Items local cache was hit {}", activityId);
+                logger.info("itemsCache|命中本地缓存|{}", activityId);
                 return flashItemCache;
             }
             if (version.equals(flashItemCache.getVersion()) || version < flashItemCache.getVersion()) {
-                logger.info("Item local cache was hit {},{}", activityId, version);
+                logger.info("itemsCache|命中本地缓存|{}", activityId, version);
                 return flashItemCache;
             }
             if (version > (flashItemCache.getVersion())) {
@@ -56,6 +56,7 @@ public class FlashItemsCacheService {
     }
 
     private FlashItemsCache getLatestDistributedCache(Long activityId) {
+        logger.info("itemsCache|读取远程缓存|{}", activityId);
         FlashItemsCache distributedCachedFlashItem = distributedCacheService.getObject(buildItemCacheKey(activityId), FlashItemsCache.class);
         if (distributedCachedFlashItem == null) {
             return tryToUpdateItemsCacheByLock(activityId);
@@ -64,6 +65,7 @@ public class FlashItemsCacheService {
     }
 
     public FlashItemsCache tryToUpdateItemsCacheByLock(Long activityId) {
+        logger.info("itemsCache|更新远程缓存|{}", activityId);
         DistributedLock lock = distributedLockFactoryService.getDistributedLock(UPDATE_ITEMS_CACHE_LOCK_KEY + activityId);
         try {
             boolean isLockSuccess = lock.tryLock(1, 5, TimeUnit.SECONDS);
@@ -82,13 +84,13 @@ public class FlashItemsCacheService {
                     .setFlashItems(flashItemPageResult.getData())
                     .setVersion(System.currentTimeMillis());
             distributedCacheService.put(buildItemCacheKey(activityId), JSON.toJSONString(flashItemCache), FIVE_MINUTES);
-            logger.info("Items distributed cache was updated:{}", activityId);
+            logger.info("itemsCache|远程缓存已更新|{}", activityId);
 
             flashItemsLocalCache.put(activityId, flashItemCache);
-            logger.info("Items local cache was updated:{}", activityId);
+            logger.info("itemsCache|本地缓存已更新|{}", activityId);
             return flashItemCache;
-        } catch (InterruptedException e) {
-            logger.warn("UPDATE_ITEMS_CACHE_LOCK was interrupted.", e);
+        } catch (Exception e) {
+            logger.error("itemsCache|远程缓存更新失败|{}", activityId);
             return new FlashItemsCache().tryLater();
         } finally {
             lock.forceUnlock();

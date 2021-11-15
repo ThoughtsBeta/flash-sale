@@ -19,6 +19,9 @@ import com.actionworks.flashsale.domain.model.PageResult;
 import com.actionworks.flashsale.domain.model.entity.FlashActivity;
 import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
 import com.alibaba.cola.exception.BizException;
+import com.alibaba.fastjson.JSON;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -34,6 +37,7 @@ import static com.actionworks.flashsale.controller.exception.ErrorCode.INVALID_T
 
 @Service
 public class DefaultActivityAppService implements FlashActivityAppService {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultActivityAppService.class);
 
     @Resource
     private FlashActivityDomainService flashActivityDomainService;
@@ -48,16 +52,19 @@ public class DefaultActivityAppService implements FlashActivityAppService {
 
     @Override
     public AppResult publishFlashActivity(String token, FlashActivityPublishCommand flashActivityPublishCommand) {
+        logger.info("activityPublish|发布秒杀活动|{},{}", token, JSON.toJSONString(flashActivityPublishCommand));
         AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_CREATE);
         if (!authResult.isSuccess()) {
             throw new AuthException(INVALID_TOKEN);
         }
         flashActivityDomainService.publishActivity(authResult.getUserId(), toDomain(flashActivityPublishCommand));
+        logger.info("activityPublish|活动已发布");
         return AppResult.buildSuccess();
     }
 
     @Override
     public AppResult modifyFlashActivity(String token, Long activityId, FlashActivityPublishCommand flashActivityPublishCommand) {
+        logger.info("activityModification|秒杀活动修改|{},{},{}", token, activityId, JSON.toJSONString(flashActivityPublishCommand));
         AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_CREATE);
         if (!authResult.isSuccess()) {
             throw new AuthException(INVALID_TOKEN);
@@ -65,26 +72,31 @@ public class DefaultActivityAppService implements FlashActivityAppService {
         FlashActivity flashActivity = toDomain(flashActivityPublishCommand);
         flashActivity.setId(activityId);
         flashActivityDomainService.modifyActivity(authResult.getUserId(), flashActivity);
+        logger.info("activityModification|活动已修改");
         return AppResult.buildSuccess();
     }
 
     @Override
     public AppResult onlineFlashActivity(String token, Long activityId) {
+        logger.info("activityOnline|上线活动|{},{}", token, activityId);
         AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_CREATE);
         if (!authResult.isSuccess()) {
             throw new AuthException(INVALID_TOKEN);
         }
         flashActivityDomainService.onlineActivity(authResult.getUserId(), activityId);
+        logger.info("activityOnline|活动已上线");
         return AppResult.buildSuccess();
     }
 
     @Override
     public AppResult offlineFlashActivity(String token, Long activityId) {
+        logger.info("activityOffline|下线活动|{},{}", token, activityId);
         AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_CREATE);
         if (!authResult.isSuccess()) {
             throw new AuthException(INVALID_TOKEN);
         }
         flashActivityDomainService.offlineActivity(authResult.getUserId(), activityId);
+        logger.info("activityOffline|活动已下线");
         return AppResult.buildSuccess();
     }
 
@@ -117,20 +129,6 @@ public class DefaultActivityAppService implements FlashActivityAppService {
         }
 
         FlashActivityCache flashActivityCache = flashActivityCacheService.getCachedActivity(activityId, version);
-        if (!flashActivityCache.isExist()) {
-            throw new BizException(ACTIVITY_NOT_FOUND.getErrDesc());
-        }
-        if (flashActivityCache.isLater()) {
-            return AppSingleResult.tryLater();
-        }
-        FlashActivityDTO flashActivityDTO = FlashActivityAppBuilder.toFlashActivityDTO(flashActivityCache.getFlashActivity());
-        flashActivityDTO.setVersion(flashActivityCache.getVersion());
-        return AppSingleResult.ok(flashActivityDTO);
-    }
-
-    @Override
-    public AppSingleResult<FlashActivityDTO> getFlashActivity(Long activityId) {
-        FlashActivityCache flashActivityCache = flashActivityCacheService.getCachedActivity(activityId, null);
         if (!flashActivityCache.isExist()) {
             throw new BizException(ACTIVITY_NOT_FOUND.getErrDesc());
         }

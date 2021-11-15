@@ -43,7 +43,7 @@ import static com.actionworks.flashsale.app.model.builder.FlashOrderAppBuilder.t
 @Service
 @ConditionalOnProperty(name = "place_order_type", havingValue = "queued")
 public class QueuedPlaceOrderService implements PlaceOrderService {
-    public static final String PLACE_ORDER_TASK_ORDER_ID_KEY = "PLACE_ORDER_TASK_ORDER_ID_KEY_";
+    private static final String PLACE_ORDER_TASK_ORDER_ID_KEY = "PLACE_ORDER_TASK_ORDER_ID_KEY_";
     private static final Logger logger = LoggerFactory.getLogger(QueuedPlaceOrderService.class);
     @Resource
     private FlashItemAppService flashItemAppService;
@@ -64,33 +64,39 @@ public class QueuedPlaceOrderService implements PlaceOrderService {
 
     @PostConstruct
     public void init() {
-        logger.info("Queued place order service init.");
+        logger.info("initPlaceOrderService|异步队列下单服务已经初始化");
     }
 
     @Override
-    public PlaceOrderResult placeOrder(Long userId, FlashPlaceOrderCommand flashPlaceOrderCommand) {
-        if (flashPlaceOrderCommand == null || !flashPlaceOrderCommand.validateParams()) {
+    public PlaceOrderResult doPlaceOrder(Long userId, FlashPlaceOrderCommand placeOrderCommand) {
+        logger.info("placeOrder|开始下单|{},{}", userId, JSON.toJSONString(placeOrderCommand));
+        if (placeOrderCommand == null || !placeOrderCommand.validateParams()) {
             return PlaceOrderResult.failed(INVALID_PARAMS);
         }
 
-        AppSingleResult<FlashItemDTO> flashItemResult = flashItemAppService.getFlashItem(flashPlaceOrderCommand.getItemId());
+        AppSingleResult<FlashItemDTO> flashItemResult = flashItemAppService.getFlashItem(placeOrderCommand.getItemId());
         if (!flashItemResult.isSuccess() || flashItemResult.getData() == null) {
+            logger.info("placeOrder|获取秒杀品失败|{},{}", userId, placeOrderCommand.getActivityId());
             return PlaceOrderResult.failed(GET_ITEM_FAILED);
         }
         FlashItemDTO flashItemDTO = flashItemResult.getData();
         if (!flashItemDTO.isOnSale()) {
+            logger.info("placeOrder|当前非在售时间|{},{}", userId, placeOrderCommand.getActivityId());
             return PlaceOrderResult.failed(ITEM_NOT_ON_SALE);
         }
 
-        String placeOrderTaskId = orderTaskIdGenerateService.generatePlaceOrderTaskId(userId, flashPlaceOrderCommand.getItemId());
+        String placeOrderTaskId = orderTaskIdGenerateService.generatePlaceOrderTaskId(userId, placeOrderCommand.getItemId());
 
-        PlaceOrderTask placeOrderTask = PlaceOrderTaskBuilder.with(userId, flashPlaceOrderCommand);
+        PlaceOrderTask placeOrderTask = PlaceOrderTaskBuilder.with(userId, placeOrderCommand);
         placeOrderTask.setPlaceOrderTaskId(placeOrderTaskId);
         OrderTaskSubmitResult submitResult = placeOrderTaskService.submit(placeOrderTask);
+        logger.info("placeOrder|任务提交结果|{},{}", userId, placeOrderTaskId, JSON.toJSONString(placeOrderTask));
 
         if (!submitResult.isSuccess()) {
+            logger.info("placeOrder|下单任务提交失败|{},{}", userId, placeOrderCommand.getActivityId());
             return PlaceOrderResult.failed(submitResult.getCode(), submitResult.getMessage());
         }
+        logger.info("placeOrder|下单任务提交完成|{},{}", userId, placeOrderTaskId);
         return PlaceOrderResult.ok(placeOrderTaskId);
     }
 
@@ -100,13 +106,13 @@ public class QueuedPlaceOrderService implements PlaceOrderService {
             Long userId = placeOrderTask.getUserId();
             boolean isActivityAllowPlaceOrder = flashActivityDomainService.isAllowPlaceOrderOrNot(placeOrderTask.getActivityId());
             if (!isActivityAllowPlaceOrder) {
-                logger.info("placeOrder|秒杀活动下单规则校验未通过:{}", userId, placeOrderTask.getActivityId());
+                logger.info("handleOrderTask|秒杀活动下单规则校验未通过|{}", placeOrderTask.getPlaceOrderTaskId(), placeOrderTask.getActivityId());
                 placeOrderTaskService.updateTaskHandleResult(placeOrderTask.getPlaceOrderTaskId(), false);
                 return;
             }
             boolean isItemAllowPlaceOrder = flashItemDomainService.isAllowPlaceOrderOrNot(placeOrderTask.getItemId());
             if (!isItemAllowPlaceOrder) {
-                logger.info("placeOrder|秒杀品下单规则校验未通过:{}", userId, placeOrderTask.getActivityId());
+                logger.info("handleOrderTask|秒杀品下单规则校验未通过|{}", placeOrderTask.getPlaceOrderTaskId(), placeOrderTask.getActivityId());
                 placeOrderTaskService.updateTaskHandleResult(placeOrderTask.getPlaceOrderTaskId(), false);
                 return;
             }
@@ -120,23 +126,24 @@ public class QueuedPlaceOrderService implements PlaceOrderService {
 
             boolean decreaseStockSuccess = flashItemDomainService.decreaseItemStock(placeOrderTask.getItemId(), placeOrderTask.getQuantity());
             if (!decreaseStockSuccess) {
-                logger.info("placeOrder|库存扣减失败:{},{}", userId, JSON.toJSONString(placeOrderTask));
+                logger.info("handleOrderTask|库存扣减失败|{},{}", placeOrderTask.getPlaceOrderTaskId(), JSON.toJSONString(placeOrderTask));
                 return;
             }
             boolean placeOrderSuccess = flashOrderDomainService.placeOrder(userId, flashOrderToPlace);
             if (!placeOrderSuccess) {
                 throw new BizException(PLACE_ORDER_FAILED.getErrDesc());
             }
-            logger.info("placeOrder|下单任务完成:{},{}", userId, JSON.toJSONString(placeOrderTask));
             placeOrderTaskService.updateTaskHandleResult(placeOrderTask.getPlaceOrderTaskId(), true);
             redisCacheService.put(PLACE_ORDER_TASK_ORDER_ID_KEY + placeOrderTask.getPlaceOrderTaskId(), orderId, HOURS_24);
+            logger.info("handleOrderTask|下单任务处理完成|{},{}", placeOrderTask.getPlaceOrderTaskId(), JSON.toJSONString(placeOrderTask));
         } catch (Exception e) {
             placeOrderTaskService.updateTaskHandleResult(placeOrderTask.getPlaceOrderTaskId(), false);
+            logger.error("handleOrderTask|下单任务处理错误|{},{}", placeOrderTask.getPlaceOrderTaskId(), JSON.toJSONString(placeOrderTask));
             throw new BizException(e.getMessage());
         }
     }
 
-    public OrderTaskHandleResult getPlaceOrderResult(Long userId, Long itemId, String placeOrderTaskId) {
+    OrderTaskHandleResult getPlaceOrderResult(Long userId, Long itemId, String placeOrderTaskId) {
         String generatedPlaceOrderTaskId = orderTaskIdGenerateService.generatePlaceOrderTaskId(userId, itemId);
         if (!generatedPlaceOrderTaskId.equals(placeOrderTaskId)) {
             return OrderTaskHandleResult.failed(PLACE_ORDER_TASK_ID_INVALID);

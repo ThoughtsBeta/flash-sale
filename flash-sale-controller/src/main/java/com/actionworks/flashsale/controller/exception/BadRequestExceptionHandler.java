@@ -4,6 +4,8 @@ import com.actionworks.flashsale.domain.exception.DomainException;
 import com.alibaba.cola.exception.BizException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.fastjson.JSON;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +23,7 @@ import static com.actionworks.flashsale.controller.constants.ExceptionCode.SENTI
 
 @ControllerAdvice
 public class BadRequestExceptionHandler extends ResponseEntityExceptionHandler {
+    private static final Logger logger = LoggerFactory.getLogger(InternalExceptionHandler.class);
 
     @ExceptionHandler(value = {BizException.class, FlowException.class, AuthException.class, DomainException.class})
     protected ResponseEntity<Object> handleConflict(RuntimeException ex, WebRequest request) {
@@ -37,6 +40,7 @@ public class BadRequestExceptionHandler extends ResponseEntityExceptionHandler {
             exceptionResponse.setErrorCode(AUTH_ERROR.getCode());
             exceptionResponse.setErrorMessage(AUTH_ERROR.getDesc());
         }
+        logger.error("expectedException|预期错误|{},{}", ex.getMessage(), ex);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         return handleExceptionInternal(ex, JSON.toJSONString(exceptionResponse), httpHeaders

@@ -1,6 +1,7 @@
 package com.actionworks.flashsale.app.scheduler;
 
 import com.actionworks.flashsale.app.cache.ItemStockCacheService;
+import com.actionworks.flashsale.config.annotion.BetaTrace;
 import com.actionworks.flashsale.domain.model.PageResult;
 import com.actionworks.flashsale.domain.model.PagesQueryCondition;
 import com.actionworks.flashsale.domain.model.entity.FlashItem;
@@ -25,6 +26,7 @@ public class FlashItemWarmUpScheduler {
 
     @Scheduled(cron = "*/5 * * * * ?")
     @SchedulerLock(name = "warmUpFlashItemTask")
+    @BetaTrace
     public void warmUpFlashItemTask() {
         logger.info("warmUpFlashItemTask|秒杀品预热调度");
         PagesQueryCondition pagesQueryCondition = new PagesQueryCondition();

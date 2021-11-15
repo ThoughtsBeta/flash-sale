@@ -10,6 +10,7 @@ import com.actionworks.flashsale.domain.model.entity.FlashOrder;
 import com.actionworks.flashsale.domain.model.enums.FlashOrderStatus;
 import com.actionworks.flashsale.domain.repository.FlashOrderRepository;
 import com.actionworks.flashsale.domain.service.FlashOrderDomainService;
+import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class FlashOrderDomainServiceImpl implements FlashOrderDomainService {
 
     @Override
     public boolean placeOrder(Long userId, FlashOrder flashOrder) {
-        logger.info("Preparing to create flash order:{},{}", userId, flashOrder);
+        logger.info("placeOrder|下单|{},{}", userId, JSON.toJSONString(flashOrder));
         if (flashOrder == null || !flashOrder.validateParamsForCreate()) {
             throw new DomainException(ONLINE_FLASH_ITEM_PARAMS_INVALID);
         }
@@ -45,7 +46,7 @@ public class FlashOrderDomainServiceImpl implements FlashOrderDomainService {
             flashOrderEvent.setEventType(FlashOrderEventType.CREATED);
             domainEventPublisher.publish(flashOrderEvent);
         }
-        logger.info("Flash order was created:{},{},{}", userId, flashOrder.getId(), saveSuccess);
+        logger.info("placeOrder|订单已创建成功|{},{}", userId, JSON.toJSONString(flashOrder));
         return saveSuccess;
     }
 
@@ -55,7 +56,7 @@ public class FlashOrderDomainServiceImpl implements FlashOrderDomainService {
             pagesQueryCondition = new PagesQueryCondition();
         }
         List<FlashOrder> flashOrders = flashOrderRepository.findFlashOrdersByCondition(pagesQueryCondition.buildParams());
-        Integer total = flashOrderRepository.countFlashOrdersByCondition(pagesQueryCondition.buildParams());
+        int total = flashOrderRepository.countFlashOrdersByCondition(pagesQueryCondition.buildParams());
         logger.info("Get flash orders:{},{}", userId, flashOrders.size());
         return PageResult.with(flashOrders, total);
     }
@@ -84,7 +85,7 @@ public class FlashOrderDomainServiceImpl implements FlashOrderDomainService {
 
     @Override
     public boolean cancelOrder(Long userId, Long orderId) {
-        logger.info("Preparing to cancel flash order:{},{}", userId, orderId);
+        logger.info("placeOrder|取消订单|{},{}", userId, orderId);
         if (StringUtils.isEmpty(userId) || orderId == null) {
             throw new DomainException(PARAMS_INVALID);
         }
@@ -106,7 +107,7 @@ public class FlashOrderDomainServiceImpl implements FlashOrderDomainService {
             flashOrderEvent.setEventType(FlashOrderEventType.CANCEL);
             domainEventPublisher.publish(flashOrderEvent);
         }
-        logger.info("Flash order was canceled:{},{}", userId, orderId, saveSuccess);
+        logger.info("placeOrder|订单已取消|{},{}", userId, orderId);
         return saveSuccess;
     }
 }

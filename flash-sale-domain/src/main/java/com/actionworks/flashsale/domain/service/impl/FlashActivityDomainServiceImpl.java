@@ -10,6 +10,7 @@ import com.actionworks.flashsale.domain.model.entity.FlashActivity;
 import com.actionworks.flashsale.domain.model.enums.FlashActivityStatus;
 import com.actionworks.flashsale.domain.repository.FlashActivityRepository;
 import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
+import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -35,38 +36,40 @@ public class FlashActivityDomainServiceImpl implements FlashActivityDomainServic
 
     @Override
     public void publishActivity(Long userId, FlashActivity flashActivity) {
-        logger.info("Preparing to publish flash activity:{},{}", userId, flashActivity);
+        logger.info("activityPublish|发布秒杀活动|{},{}", userId, JSON.toJSONString(flashActivity));
         if (flashActivity == null || !flashActivity.validateParamsForCreateOrUpdate()) {
             throw new DomainException(ONLINE_FLASH_ACTIVITY_PARAMS_INVALID);
         }
         flashActivity.setStatus(FlashActivityStatus.PUBLISHED.getCode());
         flashActivityRepository.save(flashActivity);
-        logger.info("Flash activity was published:{},{}", userId, flashActivity.getId());
+        logger.info("activityPublish|活动已发布|{},{}", userId, flashActivity.getId());
 
         FlashActivityEvent flashActivityEvent = new FlashActivityEvent();
         flashActivityEvent.setEventType(FlashActivityEventType.PUBLISHED);
         flashActivityEvent.setFlashActivity(flashActivity);
         domainEventPublisher.publish(flashActivityEvent);
+        logger.info("activityPublish|活动发布事件已发布|{}", JSON.toJSON(flashActivityEvent));
     }
 
     @Override
     public void modifyActivity(Long userId, FlashActivity flashActivity) {
-        logger.info("Preparing to modify flash activity:{},{}", userId, flashActivity);
+        logger.info("activityModification|秒杀活动修改|{},{}", userId, JSON.toJSONString(flashActivity));
         if (flashActivity == null || !flashActivity.validateParamsForCreateOrUpdate()) {
             throw new DomainException(ONLINE_FLASH_ACTIVITY_PARAMS_INVALID);
         }
         flashActivityRepository.save(flashActivity);
-        logger.info("Flash activity was modified:{},{}", userId, flashActivity.getId());
+        logger.info("activityModification|活动已修改|{},{}", userId, flashActivity.getId());
 
         FlashActivityEvent flashActivityEvent = new FlashActivityEvent();
         flashActivityEvent.setEventType(FlashActivityEventType.MODIFIED);
         flashActivityEvent.setFlashActivity(flashActivity);
         domainEventPublisher.publish(flashActivityEvent);
+        logger.info("activityModification|活动修改事件已发布|{}", JSON.toJSON(flashActivityEvent));
     }
 
     @Override
     public void onlineActivity(Long userId, Long activityId) {
-        logger.info("Preparing to online flash activity:{},{}", userId, activityId);
+        logger.info("activityOnline|上线秒杀活动|{},{}", userId, activityId);
         if (StringUtils.isEmpty(userId) || activityId == null) {
             throw new DomainException(PARAMS_INVALID);
         }
@@ -80,17 +83,18 @@ public class FlashActivityDomainServiceImpl implements FlashActivityDomainServic
         }
         flashActivity.setStatus(FlashActivityStatus.ONLINE.getCode());
         flashActivityRepository.save(flashActivity);
-        logger.info("Flash activity was online:{},{}", userId, activityId);
+        logger.info("activityOnline|活动已上线|{},{}", userId, flashActivity.getId());
 
         FlashActivityEvent flashActivityEvent = new FlashActivityEvent();
         flashActivityEvent.setEventType(FlashActivityEventType.ONLINE);
         flashActivityEvent.setFlashActivity(flashActivity);
         domainEventPublisher.publish(flashActivityEvent);
+        logger.info("activityOnline|活动上线事件已发布|{}", JSON.toJSON(flashActivityEvent));
     }
 
     @Override
     public void offlineActivity(Long userId, Long activityId) {
-        logger.info("Preparing to offline flash activity:{},{}", userId, activityId);
+        logger.info("activityOffline|下线秒杀活动|{},{}", userId, activityId);
         if (StringUtils.isEmpty(userId) || activityId == null) {
             throw new DomainException(PARAMS_INVALID);
         }
@@ -107,12 +111,13 @@ public class FlashActivityDomainServiceImpl implements FlashActivityDomainServic
         }
         flashActivity.setStatus(FlashActivityStatus.OFFLINE.getCode());
         flashActivityRepository.save(flashActivity);
-        logger.info("Flash activity was offline:{},{}", userId, activityId);
+        logger.info("activityOffline|活动已下线|{},{}", userId, flashActivity.getId());
 
         FlashActivityEvent flashActivityEvent = new FlashActivityEvent();
         flashActivityEvent.setEventType(FlashActivityEventType.OFFLINE);
         flashActivityEvent.setFlashActivity(flashActivity);
         domainEventPublisher.publish(flashActivityEvent);
+        logger.info("activityOffline|活动下线事件已发布|{}", JSON.toJSON(flashActivityEvent));
     }
 
     @Override
@@ -122,7 +127,6 @@ public class FlashActivityDomainServiceImpl implements FlashActivityDomainServic
         }
         List<FlashActivity> flashActivities = flashActivityRepository.findFlashActivitiesByCondition(pagesQueryCondition.buildParams());
         Integer total = flashActivityRepository.countFlashActivitiesByCondition(pagesQueryCondition);
-        logger.info("Get flash activities:{},{}", flashActivities.size());
         return PageResult.with(flashActivities, total);
     }
 
@@ -139,16 +143,16 @@ public class FlashActivityDomainServiceImpl implements FlashActivityDomainServic
     public boolean isAllowPlaceOrderOrNot(Long activityId) {
         Optional<FlashActivity> flashActivityOptional = flashActivityRepository.findById(activityId);
         if (!flashActivityOptional.isPresent()) {
-            logger.info("isAllowPlaceOrderOrNot|活动不存在:{}", activityId);
+            logger.info("isAllowPlaceOrderOrNot|活动不存在|{}", activityId);
             return false;
         }
         FlashActivity flashActivity = flashActivityOptional.get();
         if (!flashActivity.isOnline()) {
-            logger.info("isAllowPlaceOrderOrNot|活动尚未上线:{}", activityId);
+            logger.info("isAllowPlaceOrderOrNot|活动尚未上线|{}", activityId);
             return false;
         }
         if (!flashActivity.isInProgress()) {
-            logger.info("isAllowPlaceOrderOrNot|活动非秒杀时段:{}", activityId);
+            logger.info("isAllowPlaceOrderOrNot|活动非秒杀时段|{}", activityId);
             return false;
         }
         return true;

@@ -44,6 +44,10 @@
             <artifactId>shedlock-provider-jdbc-template</artifactId>
             <version>4.28.0</version>
         </dependency>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
