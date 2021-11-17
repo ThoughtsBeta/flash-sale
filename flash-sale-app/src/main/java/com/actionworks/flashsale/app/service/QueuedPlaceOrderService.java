@@ -1,4 +1,4 @@
-package com.actionworks.flashsale.app.service.impl;
+package com.actionworks.flashsale.app.service;
 
 import com.actionworks.flashsale.app.model.OrderTaskStatus;
 import com.actionworks.flashsale.app.model.PlaceOrderTask;
@@ -9,9 +9,9 @@ import com.actionworks.flashsale.app.model.result.AppSingleResult;
 import com.actionworks.flashsale.app.model.result.OrderTaskHandleResult;
 import com.actionworks.flashsale.app.model.result.OrderTaskSubmitResult;
 import com.actionworks.flashsale.app.model.result.PlaceOrderResult;
-import com.actionworks.flashsale.app.service.FlashItemAppService;
-import com.actionworks.flashsale.app.service.PlaceOrderService;
-import com.actionworks.flashsale.app.service.PlaceOrderTaskService;
+import com.actionworks.flashsale.app.facade.FlashItemAppService;
+import com.actionworks.flashsale.app.facade.PlaceOrderService;
+import com.actionworks.flashsale.app.facade.PlaceOrderTaskService;
 import com.actionworks.flashsale.app.util.OrderNoGenerateContext;
 import com.actionworks.flashsale.app.util.OrderNoGenerateService;
 import com.actionworks.flashsale.app.util.OrderTaskIdGenerateService;

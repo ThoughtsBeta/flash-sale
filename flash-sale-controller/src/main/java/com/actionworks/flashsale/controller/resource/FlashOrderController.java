@@ -8,7 +8,7 @@ import com.actionworks.flashsale.app.model.result.AppResult;
 import com.actionworks.flashsale.app.model.result.AppSingleResult;
 import com.actionworks.flashsale.app.model.result.OrderTaskHandleResult;
 import com.actionworks.flashsale.app.model.result.PlaceOrderResult;
-import com.actionworks.flashsale.app.service.FlashOrderAppService;
+import com.actionworks.flashsale.app.facade.FlashOrderAppService;
 import com.actionworks.flashsale.controller.model.builder.FlashOrderBuilder;
 import com.actionworks.flashsale.controller.model.builder.ResponseBuilder;
 import com.actionworks.flashsale.controller.model.request.FlashPlaceOrderRequest;

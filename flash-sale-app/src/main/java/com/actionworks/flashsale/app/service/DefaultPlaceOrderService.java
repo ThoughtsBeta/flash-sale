@@ -1,9 +1,9 @@
-package com.actionworks.flashsale.app.service.impl;
+package com.actionworks.flashsale.app.service;
 
 import com.actionworks.flashsale.app.cache.ItemStockCacheService;
 import com.actionworks.flashsale.app.model.command.FlashPlaceOrderCommand;
 import com.actionworks.flashsale.app.model.result.PlaceOrderResult;
-import com.actionworks.flashsale.app.service.PlaceOrderService;
+import com.actionworks.flashsale.app.facade.PlaceOrderService;
 import com.actionworks.flashsale.app.util.OrderNoGenerateContext;
 import com.actionworks.flashsale.app.util.OrderNoGenerateService;
 import com.actionworks.flashsale.domain.model.entity.FlashItem;

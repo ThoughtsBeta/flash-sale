@@ -1,4 +1,4 @@
-package com.actionworks.flashsale.app.service.impl;
+package com.actionworks.flashsale.app.service;
 
 import com.actionworks.flashsale.app.auth.AuthorizationService;
 import com.actionworks.flashsale.app.auth.model.AuthResult;
@@ -15,7 +15,7 @@ import com.actionworks.flashsale.app.model.query.FlashItemsQuery;
 import com.actionworks.flashsale.app.model.result.AppMultiResult;
 import com.actionworks.flashsale.app.model.result.AppResult;
 import com.actionworks.flashsale.app.model.result.AppSingleResult;
-import com.actionworks.flashsale.app.service.FlashItemAppService;
+import com.actionworks.flashsale.app.facade.FlashItemAppService;
 import com.actionworks.flashsale.controller.exception.AuthException;
 import com.actionworks.flashsale.domain.model.PageResult;
 import com.actionworks.flashsale.domain.model.entity.FlashActivity;

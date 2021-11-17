@@ -1,4 +1,4 @@
-package com.actionworks.flashsale.app.service.impl;
+package com.actionworks.flashsale.app.service;
 
 import com.actionworks.flashsale.app.cache.ItemStockCacheService;
 import com.actionworks.flashsale.app.cache.model.ItemStockCache;
@@ -6,7 +6,7 @@ import com.actionworks.flashsale.app.model.OrderTaskStatus;
 import com.actionworks.flashsale.app.model.PlaceOrderTask;
 import com.actionworks.flashsale.app.model.result.OrderTaskSubmitResult;
 import com.actionworks.flashsale.app.mq.OrderTaskPostService;
-import com.actionworks.flashsale.app.service.PlaceOrderTaskService;
+import com.actionworks.flashsale.app.facade.PlaceOrderTaskService;
 import com.actionworks.flashsale.cache.redis.RedisCacheService;
 import com.actionworks.flashsale.lock.DistributedLock;
 import com.actionworks.flashsale.lock.DistributedLockFactoryService;

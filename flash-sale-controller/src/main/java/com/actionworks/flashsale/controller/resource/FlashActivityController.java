@@ -1,6 +1,6 @@
 package com.actionworks.flashsale.controller.resource;
 
-import com.actionworks.flashsale.app.service.FlashActivityAppService;
+import com.actionworks.flashsale.app.facade.FlashActivityAppService;
 import com.actionworks.flashsale.app.model.command.FlashActivityPublishCommand;
 import com.actionworks.flashsale.app.model.dto.FlashActivityDTO;
 import com.actionworks.flashsale.app.model.query.FlashActivitiesQuery;

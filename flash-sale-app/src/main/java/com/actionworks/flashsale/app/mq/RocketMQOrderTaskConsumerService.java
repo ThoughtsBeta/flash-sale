@@ -1,7 +1,7 @@
 package com.actionworks.flashsale.app.mq;
 
 import com.actionworks.flashsale.app.model.PlaceOrderTask;
-import com.actionworks.flashsale.app.service.impl.QueuedPlaceOrderService;
+import com.actionworks.flashsale.app.service.QueuedPlaceOrderService;
 import com.alibaba.fastjson.JSON;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;

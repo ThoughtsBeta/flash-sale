@@ -1,6 +1,6 @@
 package com.actionworks.flashsale.controller.resource;
 
-import com.actionworks.flashsale.app.service.FlashItemAppService;
+import com.actionworks.flashsale.app.facade.FlashItemAppService;
 import com.actionworks.flashsale.app.model.dto.FlashItemDTO;
 import com.actionworks.flashsale.app.model.query.FlashItemsQuery;
 import com.actionworks.flashsale.app.model.result.AppMultiResult;

@@ -1,4 +1,4 @@
-package com.actionworks.flashsale.app.service;
+package com.actionworks.flashsale.app.facade;
 
 import com.actionworks.flashsale.app.model.OrderTaskStatus;
 import com.actionworks.flashsale.app.model.PlaceOrderTask;
