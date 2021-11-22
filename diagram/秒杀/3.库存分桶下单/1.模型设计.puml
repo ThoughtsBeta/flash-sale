@@ -1,0 +1,74 @@
+@startuml
+!include ../../theme/alihealth-uml-theme.iuml
+
+skinparam BoxPadding 15
+skinparam Padding 5
+
+Package 库存分桶 <<Frame>> #F2F2F2 {
+
+    interface "BucketsAPPService"{
+        分桶应用服务
+        AppSimpleResult arrangeStockBuckets(token,itemId,arrangementCommand):库存分桶编排
+        AppSimpleResult<StockBucketSummaryDTO> getStockBucketsSummary(String token, Long itemId):获取库存详情
+    }
+    interface BucketsArrangementService {
+        分桶编排服务
+        void arrangeStockBuckets(itemId, stocksAmount, bucketsAmount,assignmentMode);
+        StockBucketSummaryDTO queryStockBucketsSummary(itemId);
+    }
+    interface BucketsDomainService {
+        库存领域服务
+        boolean suspendBuckets(itemId);
+        List<Bucket> getBucketsByItem(itemId);
+
+        boolean arrangeBuckets(itemId, List<Bucket> buckets);
+
+        boolean resumeBuckets(itemId);
+    }
+
+    class DefaultBucketsAPPService implements BucketsAPPService{
+    }
+
+    class DefaultBucketsArrangementService implements BucketsArrangementService {
+    }
+    class BucketsCacheService implements ItemStockCacheService {
+        分桶库存缓存服务
+    }
+    class BucketsDomainServiceImpl implements BucketsDomainService {
+    }
+    class Bucket {
+        Integer serialNo;
+        Integer totalStocksAmount;
+        Integer availableStocksAmount;
+        Integer status;
+        Long itemId;
+    }
+}
+
+interface ItemStockCacheService {
+    秒杀品库存缓存服务
+    boolean alignItemStocks(itemId);
+    boolean decreaseItemStock(stockDeduction);
+    boolean increaseItemStock(stockDeduction);
+    ItemStockCache getAvailableItemStock(userId,itemId);
+}
+
+Package 原下单流程 <<Frame>> #F2F2F2 {
+
+    interface "PlaceOrderService"{
+        PlaceOrderResult placeOrder(userId, placeOrderCommand):下单服务接口
+    }
+
+    class NormalPlaceOrderService implements PlaceOrderService {
+        PlaceOrderResult doPlaceOrder(userId, placeOrderCommand):下单
+    }
+}
+BucketsDomainService ..> Bucket
+
+DefaultBucketsAPPService ..>BucketsArrangementService
+DefaultBucketsArrangementService ..>BucketsDomainService
+NormalPlaceOrderService ..>ItemStockCacheService
+BucketsCacheService ..>BucketsDomainService
+
+
+@enduml
