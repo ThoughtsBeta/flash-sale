@@ -615,7 +615,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"itemId\": 9,\n    \"activityId\": 7,\n    \"quantity\": 1,\n    \"totalAmount\": 200\n}"
+							"raw": "{\n    \"itemId\": 1,\n    \"activityId\": 1,\n    \"quantity\": 1,\n    \"totalAmount\": 200\n}"
 						},
 						"url": {
 							"raw": "localhost:8090/flash-orders?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
@@ -783,6 +783,86 @@
 								"14",
 								"flash-orders",
 								"1ad648571b920156266b9b6ba56229f6"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "分桶库存",
+			"item": [
+				{
+					"name": "根据秒杀品获取分桶库存",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8090/items/2/buckets?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"items",
+								"2",
+								"buckets"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "编排分桶库存",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "de250ea3-5b72-48c2-83d7-36b6c8ddeb07",
+								"exec": [
+									"const moment = require('moment');",
+									"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"totalStocksAmount\": 23,\n    \"availableStocksAmount\":23,\n    \"arrangementMode\":1\n}"
+						},
+						"url": {
+							"raw": "localhost:8090/items/1/buckets?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"items",
+								"1",
+								"buckets"
 							],
 							"query": [
 								{
