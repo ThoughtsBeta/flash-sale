@@ -1,0 +1,128 @@
+@startuml
+!include ../../theme/alihealth-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+scale 13500 height
+
+actor User
+participant Controller
+box "库存分桶核心服务" #DBD9DE
+    participant BucketsAPPService
+    participant BucketsDomainService
+    participant BucketsArrangementService
+end box
+
+User->Controller:进入应用服务接口层
+activate Controller
+Controller->BucketsAPPService:进入应用层
+
+activate BucketsAPPService
+BucketsAPPService->BucketsAPPService:账号校验
+
+alt #EEEEEE 账号校验未通过
+    BucketsAPPService --> Controller:返回应用层结果
+end
+
+BucketsAPPService->BucketsAPPService:获取变更锁
+alt #EEEEEE 获取锁失败
+    BucketsAPPService --> Controller:返回应用层结果
+end
+
+BucketsAPPService->BucketsArrangementService:分配库存(参数：库存总量,分桶数量)
+
+activate BucketsArrangementService
+BucketsArrangementService->BucketsArrangementService:参数校验
+alt #EEEEEE 参数校验失败
+    BucketsAPPService-->BucketsAPPService:返回失败结果
+end
+group #FA5B87 设置库存维护状态（独立事务控制）
+    BucketsAPPService->BucketsAPPService:设置缓存中的库存维护状态
+    note right: 库存配置前，必须先将库存设置为维护状态
+    BucketsAPPService->BucketsDomainService:设置库存维护状态
+    BucketsDomainService-->BucketsAPPService:返回结果
+
+    alt #EEEEEE 库存维护状态设置失败
+        BucketsAPPService->BucketsAPPService:回滚事务
+        BucketsAPPService-->BucketsAPPService:返回失败结果
+        BucketsAPPService->BucketsAPPService:取消缓存中的库存维护状态
+    end
+end
+
+BucketsAPPService->BucketsDomainService:获取现有分桶数据
+BucketsDomainService-->BucketsAPPService:返回现有分桶数据
+
+alt #4FBE94  不存在分桶数据
+    BucketsAPPService->BucketsAPPService:创建主桶
+    BucketsAPPService->BucketsAPPService:创建分桶
+    BucketsAPPService->BucketsDomainService:保存编排的分桶数据
+    BucketsDomainService-->BucketsAPPService:返回结果
+
+    alt 失败
+        BucketsAPPService->BucketsAPPService:抛出异常触发事务回滚
+    end
+    BucketsAPPService->BucketsAPPService:更新分桶数据缓存
+    BucketsAPPService->BucketsAPPService:更新当前秒杀品的分桶数量到缓存
+end
+
+alt #4BA6E0 存在历史分桶数据
+    alt 全量分桶（以传入的库存数量作为总的库存数量，重新计算所有分桶）
+        BucketsAPPService->BucketsAPPService:回收当前剩余库存
+        BucketsAPPService->BucketsAPPService:计算已售库存
+        alt 已售库存大于当前设定的总库存
+            BucketsAPPService->BucketsAPPService:抛出异常触发事务回滚
+        end
+
+        BucketsAPPService->BucketsAPPService:创建主桶
+        BucketsAPPService->BucketsAPPService:创建分桶
+        BucketsAPPService->BucketsDomainService:保存编排的分桶数据
+        BucketsDomainService-->BucketsAPPService:返回结果
+
+        alt 失败
+            BucketsAPPService->BucketsAPPService:抛出异常触发事务回滚
+        end
+        BucketsAPPService->BucketsAPPService:更新分桶数据缓存
+        BucketsAPPService->BucketsAPPService:更新当前秒杀品的分桶数量到缓存
+    end
+    alt 增量分桶（以传入的库存数量作为增量库存数量，重新计算所有分桶）
+        alt 现有分桶数量等于新的分桶数量
+            BucketsAPPService->BucketsAPPService:计算当前剩余可用库存
+            BucketsAPPService->BucketsAPPService:增量库存累加到当前剩余可用库存=现有可用库存
+            alt 现有可用库存<0
+                BucketsAPPService->BucketsAPPService:抛出异常触发事务回滚
+                note right: 增量库存的值为负值时，即减少总库存的数量，但最终可用库存不能小于0
+            end
+            BucketsAPPService->BucketsAPPService:创建主桶
+            BucketsAPPService->BucketsAPPService:创建分桶
+            BucketsAPPService->BucketsDomainService:保存编排的分桶数据
+            BucketsDomainService-->BucketsAPPService:返回结果
+
+            alt 失败
+                BucketsAPPService->BucketsAPPService:抛出异常触发事务回滚
+            end
+            BucketsAPPService->BucketsAPPService:更新分桶数据缓存
+            BucketsAPPService->BucketsAPPService:更新当前秒杀品的分桶数量到缓存
+            BucketsAPPService->BucketsAPPService:分摊新库存到分桶(主桶预留10%库存)
+            BucketsAPPService->BucketsDomainService:保存分桶
+            BucketsAPPService->BucketsAPPService:更新分桶信息到缓存
+            BucketsDomainService-->BucketsAPPService:返回结果
+            BucketsAPPService-->BucketsAPPService:返回结果
+        end
+    end
+end
+group #FA5B87 恢复库存维护状态
+    BucketsAPPService->BucketsAPPService:取消缓存中的库存维护状态
+    BucketsAPPService->BucketsDomainService:取消库存维护状态
+end
+deactivate BucketsDomainService
+
+BucketsAPPService->BucketsAPPService:释放变更锁
+BucketsAPPService-->Controller:返回结果
+deactivate BucketsAPPService
+Controller-->User:返回结果
+deactivate Controller
+
+@enduml
+

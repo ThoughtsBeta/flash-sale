@@ -1,0 +1,104 @@
+@startuml
+!include ../../theme/alihealth-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+
+actor User
+participant Controller
+participant FlashOrderAPPService
+participant NormalPlaceOrderService
+participant BucketsCacheService
+participant BucketsDomainService
+participant FlashOrderDomainService
+
+User->Controller:进入应用服务接口层
+activate Controller
+Controller->FlashOrderAPPService:进入应用服务应用层
+
+activate FlashOrderAPPService
+FlashOrderAPPService->FlashOrderAPPService:账号校验
+alt  账号校验未通过
+    FlashOrderAPPService --> Controller:返回应用层结果
+end
+
+FlashOrderAPPService->FlashOrderAPPService:获取下单锁
+
+alt 获取锁失败
+    FlashOrderAPPService --> Controller:返回应用层结果
+end
+group #EEEEEE 下单前置风控校验
+    FlashOrderAPPService->FlashOrderAPPService:风控与安全校验
+    alt  风控校验未通过
+        FlashOrderAPPService --> Controller:返回应用层结果
+    end
+end
+
+activate NormalPlaceOrderService
+FlashOrderAPPService -> NormalPlaceOrderService:返回校验结果
+
+group #FFC511 下单前置业务规则校验
+    activate FlashActivityAPPService
+    NormalPlaceOrderService -> FlashActivityAPPService:根据活动配置校验是否允许下单
+    FlashActivityAPPService --> NormalPlaceOrderService:返回校验结果
+    alt  活动下单校验未通过
+        NormalPlaceOrderService --> FlashOrderAPPService:返回应用层结果
+    end
+    deactivate FlashActivityAPPService
+
+    activate FlashItemAPPService
+    NormalPlaceOrderService -> FlashItemAPPService:根据秒杀品配置校验是否允许下单
+    FlashItemAPPService --> NormalPlaceOrderService:返回校验结果
+    alt  秒杀品下单校验未通过
+        NormalPlaceOrderService --> FlashOrderAPPService:返回应用层结果
+    end
+end
+
+NormalPlaceOrderService -> NormalPlaceOrderService:生成订单及ID
+group #4FBE94 分桶库存扣减
+    activate BucketsCacheService
+    NormalPlaceOrderService -> BucketsCacheService:请求下单（用户ID，秒杀品ID，下单数量）
+    BucketsCacheService->BucketsCacheService:根据用户ID路由到对应分桶
+    BucketsCacheService->BucketsCacheService:请求预扣分桶库存
+    alt 库存不存在
+        BucketsAPPService->NormalPlaceOrderService:返回扣减失败结果
+    end
+    alt 库存维护中
+        BucketsAPPService->NormalPlaceOrderService:返回扣减失败结果
+    end
+    alt 库存不足
+        BucketsAPPService->NormalPlaceOrderService:返回扣减失败结果
+    end
+    activate BucketsDomainService
+    BucketsAPPService->BucketsDomainService: 申请数据库分桶扣减库存
+    BucketsDomainService --> BucketsAPPService: 返回数据库分桶库存扣减结果
+    deactivate BucketsDomainService
+
+    alt 分桶库存扣减失败
+        BucketsCacheService->BucketsCacheService:恢复分桶库存缓存
+        BucketsCacheService-->NormalPlaceOrderService:返回库存扣减失败结果
+    end
+    BucketsCacheService-->NormalPlaceOrderService:返回库存扣减成功结果
+end
+group #50A6D3 提交订单
+    NormalPlaceOrderService -> FlashOrderDomainService: 创建订单
+    FlashOrderDomainService --> BucketsCacheService: 返回订单创建结果
+    alt 订单创建失败
+        NormalPlaceOrderService->BucketsCacheService:恢复库存缓存
+        NormalPlaceOrderService -> NormalPlaceOrderService: 抛出异常触发事务回滚
+    end
+end
+deactivate BucketsCacheService
+NormalPlaceOrderService -> FlashOrderAPPService: 返回订单创建结果
+deactivate NormalPlaceOrderService
+
+FlashOrderAPPService -->Controller:返回结果
+deactivate FlashOrderAPPService
+Controller -->User:返回结果
+deactivate Controller
+
+
+@enduml
+

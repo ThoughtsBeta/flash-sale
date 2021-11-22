@@ -1,0 +1,33 @@
+@startuml
+!include ../../theme/alihealth-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+
+hide footbox
+
+actor User
+participant Controller
+participant FlashItemAPPService
+participant BucketsCacheService
+
+User->Controller:进入应用服务接口层
+activate Controller
+Controller->FlashItemAPPService:进入应用层
+activate FlashItemAPPService
+group #4FBE94 读取秒杀品库存
+    FlashItemAPPService->BucketsCacheService:获取秒杀品分桶数据
+    BucketsCacheService->BucketsCacheService:根据用户ID路由到对应分桶
+    BucketsCacheService->BucketsCacheService:读取分桶库存
+    BucketsCacheService-->FlashItemAPPService:返回分桶库存
+end
+deactivate BucketsCacheService
+FlashItemAPPService-->Controller:返回秒杀品库存
+deactivate FlashItemAPPService
+Controller-->User:返回秒杀品库存
+deactivate Controller
+
+@enduml
+

@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS flash_sale.`flash_activity` (
   `create_time`   datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP
   COMMENT '创建时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `flash_activity_id_uk` (`id`),
   KEY `flash_activity_end_time_idx` (`end_time`),
   KEY `flash_activity_start_time_idx` (`start_time`),
   KEY `flash_activity_status_idx` (`status`)
@@ -59,7 +58,6 @@ CREATE TABLE IF NOT EXISTS flash_sale.`flash_item` (
   `create_time`     datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP
   COMMENT '创建时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `flash_item_id_uk` (`id`),
   KEY `flash_item_end_time_idx` (`end_time`),
   KEY `flash_item_start_time_idx` (`start_time`),
   KEY `flash_item_status_idx` (`status`)
@@ -99,7 +97,7 @@ CREATE TABLE IF NOT EXISTS flash_sale.`flash_order` (
   DEFAULT CHARSET = utf8mb4
   COMMENT = '秒杀订单表';
 
-CREATE TABLE shedlock (
+CREATE TABLE flash_sale.shedlock (
   name       VARCHAR(64)  NOT NULL,
   lock_until TIMESTAMP(3) NOT NULL,
   locked_at  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

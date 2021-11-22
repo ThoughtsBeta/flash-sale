@@ -15,5 +15,6 @@
         <mapper resource="mybatis/FlashItemMapper.xml"></mapper>
         <mapper resource="mybatis/FlashActivityMapper.xml"></mapper>
         <mapper resource="mybatis/FlashOrderMapper.xml"></mapper>
+        <mapper resource="mybatis/FlashBucketMapper.xml"></mapper>
     </mappers>
 </configuration>

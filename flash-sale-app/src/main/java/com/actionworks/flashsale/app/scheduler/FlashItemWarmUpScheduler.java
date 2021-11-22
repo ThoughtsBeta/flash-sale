@@ -1,12 +1,11 @@
 package com.actionworks.flashsale.app.scheduler;
 
-import com.actionworks.flashsale.app.cache.ItemStockCacheService;
+import com.actionworks.flashsale.app.service.stock.ItemStockCacheService;
 import com.actionworks.flashsale.config.annotion.BetaTrace;
 import com.actionworks.flashsale.domain.model.PageResult;
 import com.actionworks.flashsale.domain.model.PagesQueryCondition;
 import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,7 +24,6 @@ public class FlashItemWarmUpScheduler {
     private FlashItemDomainService flashItemDomainService;
 
     @Scheduled(cron = "*/5 * * * * ?")
-    @SchedulerLock(name = "warmUpFlashItemTask")
     @BetaTrace
     public void warmUpFlashItemTask() {
         logger.info("warmUpFlashItemTask|秒杀品预热调度");
@@ -33,7 +31,7 @@ public class FlashItemWarmUpScheduler {
         pagesQueryCondition.setStockWarmUp(0);
         PageResult<FlashItem> pageResult = flashItemDomainService.getFlashItems(pagesQueryCondition);
         pageResult.getData().forEach(flashItem -> {
-            boolean initSuccess = itemStockCacheService.initItemStock(flashItem.getId());
+            boolean initSuccess = itemStockCacheService.alignItemStocks(flashItem.getId());
             if (!initSuccess) {
                 logger.info("warmUpFlashItemTask|秒杀品库存已经初始化预热失败", flashItem.getId());
                 return;

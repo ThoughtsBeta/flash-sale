@@ -97,8 +97,8 @@ skinparam Rectangle {
 }
 
 skinparam Note {
-    BackgroundColor #50BA90
-    BorderColor #50BA90
+    BackgroundColor #FFC511
+    BorderColor #FFC511
     FontColor #ffffff
 }
 

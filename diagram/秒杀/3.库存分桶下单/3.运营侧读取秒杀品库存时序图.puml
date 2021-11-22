@@ -1,0 +1,32 @@
+@startuml
+!include ../../theme/alihealth-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+
+actor User
+participant Controller
+participant BucketsAPPService
+participant BucketsArrangementService
+participant BucketsDomainService
+
+User->Controller:进入应用服务接口层
+activate Controller
+Controller->BucketsAPPService:进入应用层
+activate BucketsAPPService
+group #4FBE94 读取秒杀品库存
+    BucketsAPPService->BucketsArrangementService:获取秒杀品分桶数据
+    BucketsArrangementService->BucketsDomainService:获取秒杀品分桶数据
+    BucketsArrangementService->BucketsArrangementService:构建分桶数据结果
+    BucketsArrangementService-->BucketsAPPService:返回分桶库存
+end
+deactivate BucketsArrangementService
+BucketsAPPService-->Controller:返回秒杀品库存
+deactivate BucketsAPPService
+Controller-->User:返回秒杀品库存
+deactivate Controller
+
+@enduml
+

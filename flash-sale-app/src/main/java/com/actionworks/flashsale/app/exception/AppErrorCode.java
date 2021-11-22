@@ -10,7 +10,7 @@ public enum AppErrorCode implements ErrorCodeI {
     INVALID_PARAMS("INVALID_PARAMS", "参数错误"),
     TRY_LATER("TRY_LATER", "稍后再试"),
     FREQUENTLY_ERROR("FREQUENTLY_ERROR", "操作频繁，稍后再试"),
-    UNKNOWN_ERROR("UNKNOWN_ERROR", "未知错误"),
+    BUSINESS_ERROR("BUSINESS_ERROR", "未知错误"),
 
     /**
      * 活动相关错误
@@ -40,7 +40,10 @@ public enum AppErrorCode implements ErrorCodeI {
     ORDER_TYPE_NOT_SUPPORT("ORDER_TYPE_NOT_SUPPORT", "下单类型不支持"),
     ORDER_CANCEL_FAILED("ORDER_CANCEL_FAILED", "订单取消失败"),
     PLACE_ORDER_FAILED("PLACE_ORDER_FAILED", "下单失败"),
-    PLACE_ORDER_TASK_ID_INVALID("PLACE_ORDER_TASK_ID_INVALID", "下单任务编号错误");
+    PLACE_ORDER_TASK_ID_INVALID("PLACE_ORDER_TASK_ID_INVALID", "下单任务编号错误"),
+
+    ARRANGE_STOCK_BUCKETS_FAILED("ARRANGE_STOCK_BUCKETS_FAILED", "库存编排错误"),
+    QUERY_STOCK_BUCKETS_FAILED("QUERY_STOCK_BUCKETS_FAILED", "获取库存分桶错误");
 
     private final String errCode;
     private final String errDesc;

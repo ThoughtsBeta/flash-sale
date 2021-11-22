@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.actionworks.flashsale.persistence.mapper.BucketMapper">
+    <sql id="ALL_COLUMNS">
+        item_id,
+        total_stocks_amount,
+        available_stocks_amount,
+        serial_no,
+        status,
+        modified_time,
+        create_time
+    </sql>
+
+    <insert id="insertBatch">
+        INSERT INTO flash_bucket(
+        item_id,
+        total_stocks_amount,
+        available_stocks_amount,
+        serial_no,
+        status,
+        modified_time,
+        create_time)
+        VALUES
+        <foreach collection="list" item="bucket" separator=",">
+            (
+            #{bucket.itemId,jdbcType=BIGINT},
+            #{bucket.totalStocksAmount,jdbcType=INTEGER},
+            #{bucket.availableStocksAmount,jdbcType=INTEGER},
+            #{bucket.serialNo,jdbcType=INTEGER},
+            #{bucket.status,jdbcType=INTEGER},
+            now(),
+            now())
+        </foreach>
+    </insert>
+
+    <select id="getBucketsByItem" resultType="com.actionworks.flashsale.persistence.model.BucketDO" parameterType="java.lang.Long">
+        SELECT *
+        FROM flash_bucket
+        WHERE item_id = #{itemId}
+    </select>
+
+    <update id="updateStatusByItem">
+        UPDATE flash_bucket
+        SET modified_time = now(),
+            status        = #{status}
+        WHERE item_id = #{itemId}
+    </update>
+
+    <update id="deleteByItem">
+        DELETE
+        FROM flash_bucket
+        WHERE item_id = #{itemId}
+    </update>
+
+    <update id="decreaseItemStock">
+        UPDATE flash_bucket
+        SET modified_time           = now(),
+            available_stocks_amount = available_stocks_amount - #{quantity}
+        where item_id = #{itemId}
+          and serial_no = #{serialNo}
+          and available_stocks_amount <![CDATA[ >= ]]>  #{quantity}
+          and status = 1
+    </update>
+
+    <update id="increaseItemStock">
+        UPDATE flash_bucket
+        SET modified_time           = now(),
+            available_stocks_amount = available_stocks_amount + #{quantity}
+        where item_id = #{itemId}
+          and serial_no = #{serialNo}
+          and (available_stocks_amount + #{quantity}) <![CDATA[ <= ]]> total_stocks_amount
+          and status = 1
+    </update>
+</mapper>

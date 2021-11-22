@@ -1,8 +1,8 @@
 package com.actionworks.flashsale.app.event.handler;
 
 
-import com.actionworks.flashsale.app.cache.FlashActivitiesCacheService;
-import com.actionworks.flashsale.app.cache.FlashActivityCacheService;
+import com.actionworks.flashsale.app.service.activity.cache.FlashActivitiesCacheService;
+import com.actionworks.flashsale.app.service.activity.cache.FlashActivityCacheService;
 import com.actionworks.flashsale.config.annotion.BetaTrace;
 import com.actionworks.flashsale.domain.event.FlashActivityEvent;
 import com.alibaba.cola.dto.Response;

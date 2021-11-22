@@ -1,7 +1,7 @@
 package com.actionworks.flashsale.app.model.result;
 
 import com.actionworks.flashsale.app.exception.AppErrorCode;
-import com.actionworks.flashsale.app.model.OrderTaskStatus;
+import com.actionworks.flashsale.app.model.enums.OrderTaskStatus;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
