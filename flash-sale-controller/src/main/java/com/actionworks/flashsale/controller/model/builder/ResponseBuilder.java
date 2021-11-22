@@ -2,7 +2,7 @@ package com.actionworks.flashsale.controller.model.builder;
 
 import com.actionworks.flashsale.app.model.result.AppMultiResult;
 import com.actionworks.flashsale.app.model.result.AppResult;
-import com.actionworks.flashsale.app.model.result.AppSingleResult;
+import com.actionworks.flashsale.app.model.result.AppSimpleResult;
 import com.alibaba.cola.dto.MultiResponse;
 import com.alibaba.cola.dto.Response;
 import com.alibaba.cola.dto.SingleResponse;
@@ -31,7 +31,7 @@ public class ResponseBuilder {
         return multiResponse;
     }
 
-    public static <T> SingleResponse<T> withSingle(AppSingleResult appResult) {
+    public static <T> SingleResponse<T> withSingle(AppSimpleResult appResult) {
         if (appResult == null) {
             return new SingleResponse<>();
         }

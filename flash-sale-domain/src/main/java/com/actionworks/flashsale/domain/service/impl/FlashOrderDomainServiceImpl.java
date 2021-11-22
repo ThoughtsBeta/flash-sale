@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.actionworks.flashsale.domain.exception.DomainErrorCode.FLASH_ITEM_DOES_NOT_EXIST;
-import static com.actionworks.flashsale.domain.exception.DomainErrorCode.ONLINE_FLASH_ITEM_PARAMS_INVALID;
 import static com.actionworks.flashsale.domain.exception.DomainErrorCode.PARAMS_INVALID;
 
 @Service
@@ -37,7 +36,7 @@ public class FlashOrderDomainServiceImpl implements FlashOrderDomainService {
     public boolean placeOrder(Long userId, FlashOrder flashOrder) {
         logger.info("placeOrder|下单|{},{}", userId, JSON.toJSONString(flashOrder));
         if (flashOrder == null || !flashOrder.validateParamsForCreate()) {
-            throw new DomainException(ONLINE_FLASH_ITEM_PARAMS_INVALID);
+            throw new DomainException(PARAMS_INVALID);
         }
         flashOrder.setStatus(FlashOrderStatus.CREATED.getCode());
         boolean saveSuccess = flashOrderRepository.save(flashOrder);

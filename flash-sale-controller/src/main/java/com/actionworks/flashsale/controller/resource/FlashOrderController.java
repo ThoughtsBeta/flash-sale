@@ -1,14 +1,14 @@
 package com.actionworks.flashsale.controller.resource;
 
+import com.actionworks.flashsale.app.service.order.FlashOrderAppService;
 import com.actionworks.flashsale.app.model.command.FlashPlaceOrderCommand;
 import com.actionworks.flashsale.app.model.dto.FlashOrderDTO;
 import com.actionworks.flashsale.app.model.query.FlashOrdersQuery;
 import com.actionworks.flashsale.app.model.result.AppMultiResult;
 import com.actionworks.flashsale.app.model.result.AppResult;
-import com.actionworks.flashsale.app.model.result.AppSingleResult;
+import com.actionworks.flashsale.app.model.result.AppSimpleResult;
 import com.actionworks.flashsale.app.model.result.OrderTaskHandleResult;
 import com.actionworks.flashsale.app.model.result.PlaceOrderResult;
-import com.actionworks.flashsale.app.facade.FlashOrderAppService;
 import com.actionworks.flashsale.controller.model.builder.FlashOrderBuilder;
 import com.actionworks.flashsale.controller.model.builder.ResponseBuilder;
 import com.actionworks.flashsale.controller.model.request.FlashPlaceOrderRequest;
@@ -39,7 +39,7 @@ public class FlashOrderController {
     @SentinelResource("PlaceOrderResource")
     public SingleResponse<PlaceOrderResult> placeOrder(@RequestParam String token, @RequestBody FlashPlaceOrderRequest flashPlaceOrderRequest) {
         FlashPlaceOrderCommand placeOrderCommand = FlashOrderBuilder.toCommand(flashPlaceOrderRequest);
-        AppSingleResult<PlaceOrderResult> placeOrderResult = flashOrderAppService.placeOrder(token, placeOrderCommand);
+        AppSimpleResult<PlaceOrderResult> placeOrderResult = flashOrderAppService.placeOrder(token, placeOrderCommand);
         if (!placeOrderResult.isSuccess() || placeOrderResult.getData() == null) {
             return ResponseBuilder.withSingle(placeOrderResult);
         }
@@ -49,7 +49,7 @@ public class FlashOrderController {
     @GetMapping(value = "/items/{itemId}/flash-orders/{placeOrderTaskId}")
     @SentinelResource("PlaceOrderTask")
     public SingleResponse<OrderTaskHandleResult> getPlaceOrderTaskResult(@RequestParam String token, @PathVariable Long itemId, @PathVariable String placeOrderTaskId) {
-        AppSingleResult<OrderTaskHandleResult> placeOrderTaskResult = flashOrderAppService.getPlaceOrderTaskResult(token, itemId, placeOrderTaskId);
+        AppSimpleResult<OrderTaskHandleResult> placeOrderTaskResult = flashOrderAppService.getPlaceOrderTaskResult(token, itemId, placeOrderTaskId);
         if (!placeOrderTaskResult.isSuccess() || placeOrderTaskResult.getData() == null) {
             return ResponseBuilder.withSingle(placeOrderTaskResult);
         }

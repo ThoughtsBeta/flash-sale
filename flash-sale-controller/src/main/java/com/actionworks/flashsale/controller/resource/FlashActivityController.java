@@ -1,16 +1,16 @@
 package com.actionworks.flashsale.controller.resource;
 
-import com.actionworks.flashsale.app.facade.FlashActivityAppService;
+import com.actionworks.flashsale.app.service.activity.FlashActivityAppService;
 import com.actionworks.flashsale.app.model.command.FlashActivityPublishCommand;
 import com.actionworks.flashsale.app.model.dto.FlashActivityDTO;
 import com.actionworks.flashsale.app.model.query.FlashActivitiesQuery;
 import com.actionworks.flashsale.app.model.result.AppMultiResult;
 import com.actionworks.flashsale.app.model.result.AppResult;
-import com.actionworks.flashsale.app.model.result.AppSingleResult;
+import com.actionworks.flashsale.app.model.result.AppSimpleResult;
 import com.actionworks.flashsale.controller.model.builder.FlashActivityBuilder;
+import com.actionworks.flashsale.controller.model.builder.ResponseBuilder;
 import com.actionworks.flashsale.controller.model.request.FlashActivityPublishRequest;
 import com.actionworks.flashsale.controller.model.response.FlashActivityResponse;
-import com.actionworks.flashsale.controller.model.builder.ResponseBuilder;
 import com.actionworks.flashsale.domain.model.enums.FlashActivityStatus;
 import com.alibaba.cola.dto.MultiResponse;
 import com.alibaba.cola.dto.Response;
@@ -80,7 +80,7 @@ public class FlashActivityController {
         if (!flashActivitiesResult.isSuccess() || flashActivitiesResult.getData() == null) {
             return ResponseBuilder.withMulti(flashActivitiesResult);
         }
-        return MultiResponse.of(toFlashActivitiesResponse(flashActivitiesResult.getData()),flashActivitiesResult.getTotal());
+        return MultiResponse.of(toFlashActivitiesResponse(flashActivitiesResult.getData()), flashActivitiesResult.getTotal());
     }
 
     @GetMapping(value = "/flash-activities/{activityId}")
@@ -88,7 +88,7 @@ public class FlashActivityController {
     public SingleResponse<FlashActivityResponse> getFlashActivity(@RequestParam String token,
                                                                   @PathVariable Long activityId,
                                                                   @RequestParam(required = false) Long version) {
-        AppSingleResult<FlashActivityDTO> flashActivityResult = flashActivityAppService.getFlashActivity(token, activityId, version);
+        AppSimpleResult<FlashActivityDTO> flashActivityResult = flashActivityAppService.getFlashActivity(token, activityId, version);
         if (!flashActivityResult.isSuccess() || flashActivityResult.getData() == null) {
             return ResponseBuilder.withSingle(flashActivityResult);
         }

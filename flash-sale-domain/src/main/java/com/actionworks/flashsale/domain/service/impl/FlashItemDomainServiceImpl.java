@@ -122,39 +122,4 @@ public class FlashItemDomainServiceImpl implements FlashItemDomainService {
         }
         return flashItemOptional.get();
     }
-
-    @Override
-    public boolean decreaseItemStock(Long itemId, Integer quantity) {
-        if (itemId == null || quantity == null) {
-            throw new DomainException(PARAMS_INVALID);
-        }
-        return flashItemRepository.decreaseItemStock(itemId, quantity);
-    }
-
-    @Override
-    public boolean increaseItemStock(Long itemId, Integer quantity) {
-        if (itemId == null || quantity == null) {
-            throw new DomainException(PARAMS_INVALID);
-        }
-        return flashItemRepository.increaseItemStock(itemId, quantity);
-    }
-
-    @Override
-    public boolean isAllowPlaceOrderOrNot(Long itemId) {
-        Optional<FlashItem> flashItemOptional = flashItemRepository.findById(itemId);
-        if (!flashItemOptional.isPresent()) {
-            logger.info("isAllowPlaceOrderOrNot|秒杀品不存在|{}", itemId);
-            return false;
-        }
-        FlashItem flashItem = flashItemOptional.get();
-        if (!flashItem.isOnline()) {
-            logger.info("isAllowPlaceOrderOrNot|秒杀品尚未上线|{}", itemId);
-            return false;
-        }
-        if (!flashItem.isInProgress()) {
-            logger.info("isAllowPlaceOrderOrNot|当前非秒杀时段|{}", itemId);
-            return false;
-        }
-        return true;
-    }
 }

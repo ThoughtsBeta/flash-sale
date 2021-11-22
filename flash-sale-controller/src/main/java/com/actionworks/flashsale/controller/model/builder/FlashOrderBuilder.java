@@ -18,6 +18,7 @@ public class FlashOrderBuilder {
         BeanUtils.copyProperties(flashPlaceOrderRequest, flashPlaceOrderCommand);
         return flashPlaceOrderCommand;
     }
+
     public static FlashOrderResponse toFlashOrderResponse(FlashOrderDTO flashOrderDTO) {
         if (flashOrderDTO == null) {
             return null;

@@ -145,6 +145,6 @@
         SET modified_time   = now(),
             available_stock = available_stock + #{quantity}
         where id = #{itemId}
-          and available_stock <![CDATA[ <= ]]> initial_stock
+          and (available_stock + #{quantity}) <![CDATA[ <= ]]> initial_stock
     </update>
 </mapper>
