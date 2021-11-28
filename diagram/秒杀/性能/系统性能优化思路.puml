@@ -1,6 +1,6 @@
 @startmindmap
 
-!include ../theme/thoughts-uml-theme.iuml
+!include ../../theme/thoughts-uml-theme.iuml
 <style>
 mindmapDiagram {
     node {
