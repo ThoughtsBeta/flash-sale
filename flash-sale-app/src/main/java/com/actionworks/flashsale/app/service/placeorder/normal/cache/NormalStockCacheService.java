@@ -2,6 +2,7 @@ package com.actionworks.flashsale.app.service.placeorder.normal.cache;
 
 import com.actionworks.flashsale.app.service.stock.ItemStockCacheService;
 import com.actionworks.flashsale.app.service.stock.model.ItemStockCache;
+import com.actionworks.flashsale.app.util.MultiPlaceOrderTypesCondition;
 import com.actionworks.flashsale.cache.DistributedCacheService;
 import com.actionworks.flashsale.cache.redis.RedisCacheService;
 import com.actionworks.flashsale.domain.model.StockDeduction;
@@ -15,7 +16,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import static com.actionworks.flashsale.util.StringUtil.link;
 
 @Service
-@ConditionalOnProperty(name = "place_order_type", havingValue = "normal", matchIfMissing = true)
+@Conditional(MultiPlaceOrderTypesCondition.class)
 public class NormalStockCacheService implements ItemStockCacheService {
     private static final String ITEM_STOCK_ALIGN_LOCK_KEY = "ITEM_STOCK_ALIGN_LOCK_KEY";
     private static final Logger logger = LoggerFactory.getLogger(NormalStockCacheService.class);
@@ -121,7 +122,7 @@ public class NormalStockCacheService implements ItemStockCacheService {
             }
             if (result == -997) {
                 logger.info("alignItemStocks|已在校准中，本次校准取消|{},{},{},{}", result, itemId, key1ItemStocksCacheKey, flashItem.getInitialStock());
-                return false;
+                return true;
             }
             if (result == 1) {
                 logger.info("alignItemStocks|秒杀品库存校准完成|{},{},{},{}", result, itemId, key1ItemStocksCacheKey, flashItem.getInitialStock());
