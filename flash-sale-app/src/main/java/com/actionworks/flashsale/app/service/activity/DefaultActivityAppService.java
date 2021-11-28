@@ -2,6 +2,7 @@ package com.actionworks.flashsale.app.service.activity;
 
 import com.actionworks.flashsale.app.auth.AuthorizationService;
 import com.actionworks.flashsale.app.auth.model.AuthResult;
+import com.actionworks.flashsale.app.exception.BizException;
 import com.actionworks.flashsale.app.model.builder.FlashActivityAppBuilder;
 import com.actionworks.flashsale.app.model.command.FlashActivityPublishCommand;
 import com.actionworks.flashsale.app.model.dto.FlashActivityDTO;
@@ -17,7 +18,6 @@ import com.actionworks.flashsale.controller.exception.AuthException;
 import com.actionworks.flashsale.domain.model.PageResult;
 import com.actionworks.flashsale.domain.model.entity.FlashActivity;
 import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
-import com.alibaba.cola.exception.BizException;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +27,12 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.actionworks.flashsale.app.auth.model.ResourceEnum.FLASH_ITEMS_GET;
 import static com.actionworks.flashsale.app.auth.model.ResourceEnum.FLASH_ITEM_CREATE;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ACTIVITY_NOT_FOUND;
+import static com.actionworks.flashsale.app.exception.AppErrorCode.INVALID_PARAMS;
 import static com.actionworks.flashsale.app.model.builder.FlashActivityAppBuilder.toDomain;
 import static com.actionworks.flashsale.app.model.builder.FlashActivityAppBuilder.toFlashActivitiesQuery;
-import static com.actionworks.flashsale.controller.exception.ErrorCode.INVALID_TOKEN;
+import static com.actionworks.flashsale.controller.exception.ErrorCode.UNAUTHORIZED_ACCESS;
 
 @Service
 public class DefaultActivityAppService implements FlashActivityAppService {
@@ -50,57 +50,69 @@ public class DefaultActivityAppService implements FlashActivityAppService {
     private FlashActivitiesCacheService flashActivitiesCacheService;
 
     @Override
-    public AppResult publishFlashActivity(String token, FlashActivityPublishCommand flashActivityPublishCommand) {
-        logger.info("activityPublish|发布秒杀活动|{},{}", token, JSON.toJSONString(flashActivityPublishCommand));
-        AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_CREATE);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+    public AppResult publishFlashActivity(Long userId, FlashActivityPublishCommand flashActivityPublishCommand) {
+        logger.info("activityPublish|发布秒杀活动|{},{}", userId, JSON.toJSONString(flashActivityPublishCommand));
+        if (userId == null || flashActivityPublishCommand == null || !flashActivityPublishCommand.validate()) {
+            throw new BizException(INVALID_PARAMS);
         }
-        flashActivityDomainService.publishActivity(authResult.getUserId(), toDomain(flashActivityPublishCommand));
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_CREATE);
+        if (!authResult.isSuccess()) {
+            throw new AuthException(UNAUTHORIZED_ACCESS);
+        }
+        flashActivityDomainService.publishActivity(userId, toDomain(flashActivityPublishCommand));
         logger.info("activityPublish|活动已发布");
         return AppResult.buildSuccess();
     }
 
     @Override
-    public AppResult modifyFlashActivity(String token, Long activityId, FlashActivityPublishCommand flashActivityPublishCommand) {
-        logger.info("activityModification|秒杀活动修改|{},{},{}", token, activityId, JSON.toJSONString(flashActivityPublishCommand));
-        AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_CREATE);
+    public AppResult modifyFlashActivity(Long userId, Long activityId, FlashActivityPublishCommand flashActivityPublishCommand) {
+        logger.info("activityModification|秒杀活动修改|{},{},{}", userId, activityId, JSON.toJSONString(flashActivityPublishCommand));
+        if (userId == null || flashActivityPublishCommand == null || !flashActivityPublishCommand.validate()) {
+            throw new BizException(INVALID_PARAMS);
+        }
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_CREATE);
         if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+            throw new AuthException(UNAUTHORIZED_ACCESS);
         }
         FlashActivity flashActivity = toDomain(flashActivityPublishCommand);
         flashActivity.setId(activityId);
-        flashActivityDomainService.modifyActivity(authResult.getUserId(), flashActivity);
+        flashActivityDomainService.modifyActivity(userId, flashActivity);
         logger.info("activityModification|活动已修改");
         return AppResult.buildSuccess();
     }
 
     @Override
-    public AppResult onlineFlashActivity(String token, Long activityId) {
-        logger.info("activityOnline|上线活动|{},{}", token, activityId);
-        AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_CREATE);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+    public AppResult onlineFlashActivity(Long userId, Long activityId) {
+        logger.info("activityOnline|上线活动|{},{}", userId, activityId);
+        if (userId == null || activityId == null) {
+            throw new BizException(INVALID_PARAMS);
         }
-        flashActivityDomainService.onlineActivity(authResult.getUserId(), activityId);
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_CREATE);
+        if (!authResult.isSuccess()) {
+            throw new AuthException(UNAUTHORIZED_ACCESS);
+        }
+        flashActivityDomainService.onlineActivity(userId, activityId);
         logger.info("activityOnline|活动已上线");
         return AppResult.buildSuccess();
     }
 
     @Override
-    public AppResult offlineFlashActivity(String token, Long activityId) {
-        logger.info("activityOffline|下线活动|{},{}", token, activityId);
-        AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_CREATE);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+    public AppResult offlineFlashActivity(Long userId, Long activityId) {
+        logger.info("activityOffline|下线活动|{},{}", userId, activityId);
+        if (userId == null || activityId == null) {
+            throw new BizException(INVALID_PARAMS);
         }
-        flashActivityDomainService.offlineActivity(authResult.getUserId(), activityId);
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_CREATE);
+        if (!authResult.isSuccess()) {
+            throw new AuthException(UNAUTHORIZED_ACCESS);
+        }
+        flashActivityDomainService.offlineActivity(userId, activityId);
         logger.info("activityOffline|活动已下线");
         return AppResult.buildSuccess();
     }
 
     @Override
-    public AppMultiResult<FlashActivityDTO> getFlashActivities(String token, FlashActivitiesQuery flashActivitiesQuery) {
+    public AppMultiResult<FlashActivityDTO> getFlashActivities(Long userId, FlashActivitiesQuery flashActivitiesQuery) {
         List<FlashActivity> activities;
         Integer total;
         if (flashActivitiesQuery.isFirstPureQuery()) {
@@ -121,12 +133,10 @@ public class DefaultActivityAppService implements FlashActivityAppService {
     }
 
     @Override
-    public AppSimpleResult<FlashActivityDTO> getFlashActivity(String token, Long activityId, Long version) {
-        AuthResult authResult = authorizationService.auth(token, FLASH_ITEMS_GET);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+    public AppSimpleResult<FlashActivityDTO> getFlashActivity(Long userId, Long activityId, Long version) {
+        if (userId == null || activityId == null) {
+            throw new BizException(INVALID_PARAMS);
         }
-
         FlashActivityCache flashActivityCache = flashActivityCacheService.getCachedActivity(activityId, version);
         if (!flashActivityCache.isExist()) {
             throw new BizException(ACTIVITY_NOT_FOUND.getErrDesc());

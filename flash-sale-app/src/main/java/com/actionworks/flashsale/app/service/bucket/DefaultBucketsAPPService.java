@@ -11,7 +11,7 @@ import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
 import com.actionworks.flashsale.lock.DistributedLock;
 import com.actionworks.flashsale.lock.DistributedLockFactoryService;
-import com.alibaba.cola.exception.BizException;
+import com.actionworks.flashsale.app.exception.BizException;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,13 +50,9 @@ public class DefaultBucketsAPPService implements BucketsAPPService {
     private BucketsArrangementService bucketsArrangementService;
 
     @Override
-    public AppSimpleResult arrangeStockBuckets(String token, Long itemId, BucketsArrangementCommand arrangementCommand) {
-        logger.info("arrangeBuckets|编排库存分桶|{},{},{}", token, itemId, JSON.toJSON(arrangementCommand));
-        AuthResult authResult = authorizationService.auth(token, STOCK_BUCKETS_ARRANGEMENT);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
-        }
-        String arrangementKey = getArrangementKey(authResult.getUserId(), itemId);
+    public AppSimpleResult arrangeStockBuckets(Long userId, Long itemId, BucketsArrangementCommand arrangementCommand) {
+        logger.info("arrangeBuckets|编排库存分桶|{},{},{}", userId, itemId, JSON.toJSON(arrangementCommand));
+        String arrangementKey = getArrangementKey(userId, itemId);
         DistributedLock arrangementLock = lockFactoryService.getDistributedLock(arrangementKey);
         try {
             boolean isLockSuccess = arrangementLock.tryLock(5, 5, TimeUnit.SECONDS);
@@ -84,12 +80,8 @@ public class DefaultBucketsAPPService implements BucketsAPPService {
     }
 
     @Override
-    public AppSimpleResult<StockBucketSummaryDTO> getStockBucketsSummary(String token, Long itemId) {
-        logger.info("stockBucketsSummary|获取库存分桶数据|{},{}", token, itemId);
-        AuthResult authResult = authorizationService.auth(token, STOCK_BUCKETS_SUMMERY_QUERY);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
-        }
+    public AppSimpleResult<StockBucketSummaryDTO> getStockBucketsSummary(Long userId, Long itemId) {
+        logger.info("stockBucketsSummary|获取库存分桶数据|{},{}", userId, itemId);
         try {
             StockBucketSummaryDTO stockBucketSummaryDTO = bucketsArrangementService.queryStockBucketsSummary(itemId);
             return AppSimpleResult.ok(stockBucketSummaryDTO);

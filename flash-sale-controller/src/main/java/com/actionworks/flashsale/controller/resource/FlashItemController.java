@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,15 +36,15 @@ public class FlashItemController {
     private FlashItemAppService flashItemAppService;
 
     @PostMapping(value = "/activities/{activityId}/flash-items")
-    public Response publishFlashItem(@RequestParam String token, @PathVariable Long activityId, @RequestBody FlashItemPublishRequest flashItemPublishRequest) {
-        AppResult publishResult = flashItemAppService.publishFlashItem(token, activityId, toCommand(flashItemPublishRequest));
+    public Response publishFlashItem(@RequestAttribute Long userId, @PathVariable Long activityId, @RequestBody FlashItemPublishRequest flashItemPublishRequest) {
+        AppResult publishResult = flashItemAppService.publishFlashItem(userId, activityId, toCommand(flashItemPublishRequest));
         return ResponseBuilder.with(publishResult);
 
     }
 
     @GetMapping(value = "/activities/{activityId}/flash-items")
     @SentinelResource("GetFlashItems")
-    public MultiResponse<FlashItemDTO> getFlashItems(@RequestParam String token,
+    public MultiResponse<FlashItemDTO> getFlashItems(@RequestAttribute Long userId,
                                                      @PathVariable Long activityId,
                                                      @RequestParam Integer pageSize,
                                                      @RequestParam Integer pageNumber,
@@ -52,13 +53,13 @@ public class FlashItemController {
                 .setKeyword(keyword)
                 .setPageSize(pageSize)
                 .setPageNumber(pageNumber);
-        AppMultiResult<FlashItemDTO> flashItemsResult = flashItemAppService.getFlashItems(token, activityId, flashItemsQuery);
+        AppMultiResult<FlashItemDTO> flashItemsResult = flashItemAppService.getFlashItems(userId, activityId, flashItemsQuery);
         return ResponseBuilder.withMulti(flashItemsResult);
     }
 
     @GetMapping(value = "/activities/{activityId}/flash-items/online")
     @SentinelResource("GetOnlineFlashItems")
-    public MultiResponse<FlashItemResponse> getOnlineFlashItems(@RequestParam String token,
+    public MultiResponse<FlashItemResponse> getOnlineFlashItems(@RequestAttribute Long userId,
                                                                 @PathVariable Long activityId,
                                                                 @RequestParam Integer pageSize,
                                                                 @RequestParam Integer pageNumber,
@@ -68,7 +69,7 @@ public class FlashItemController {
                 .setPageSize(pageSize)
                 .setPageNumber(pageNumber)
                 .setStatus(FlashItemStatus.ONLINE.getCode());
-        AppMultiResult<FlashItemDTO> flashItemsResult = flashItemAppService.getFlashItems(token, activityId, flashItemsQuery);
+        AppMultiResult<FlashItemDTO> flashItemsResult = flashItemAppService.getFlashItems(userId, activityId, flashItemsQuery);
         if (!flashItemsResult.isSuccess() || flashItemsResult.getData() == null) {
             return ResponseBuilder.withMulti(flashItemsResult);
         }
@@ -77,11 +78,11 @@ public class FlashItemController {
 
     @GetMapping(value = "/activities/{activityId}/flash-items/{itemId}")
     @SentinelResource("GetFlashItem")
-    public SingleResponse<FlashItemResponse> getFlashItem(@RequestParam String token,
+    public SingleResponse<FlashItemResponse> getFlashItem(@RequestAttribute Long userId,
                                                           @PathVariable Long activityId,
                                                           @PathVariable Long itemId,
                                                           @RequestParam(required = false) Long version) {
-        AppSimpleResult<FlashItemDTO> flashItemResult = flashItemAppService.getFlashItem(token, activityId, itemId, version);
+        AppSimpleResult<FlashItemDTO> flashItemResult = flashItemAppService.getFlashItem(userId, activityId, itemId, version);
         if (!flashItemResult.isSuccess() || flashItemResult.getData() == null) {
             return ResponseBuilder.withSingle(flashItemResult);
         }
@@ -89,14 +90,14 @@ public class FlashItemController {
     }
 
     @PutMapping(value = "/activities/{activityId}/flash-items/{itemId}/online")
-    public Response onlineFlashItem(@RequestParam String token, @PathVariable Long activityId, @PathVariable Long itemId) {
-        AppResult onlineResult = flashItemAppService.onlineFlashItem(token, activityId, itemId);
+    public Response onlineFlashItem(@RequestAttribute Long userId, @PathVariable Long activityId, @PathVariable Long itemId) {
+        AppResult onlineResult = flashItemAppService.onlineFlashItem(userId, activityId, itemId);
         return ResponseBuilder.with(onlineResult);
     }
 
     @PutMapping(value = "/activities/{activityId}/flash-items/{itemId}/offline")
-    public Response offlineFlashItem(@RequestParam String token, @PathVariable Long activityId, @PathVariable Long itemId) {
-        AppResult onlineResult = flashItemAppService.onlineFlashItem(token, activityId, itemId);
+    public Response offlineFlashItem(@RequestAttribute Long userId, @PathVariable Long activityId, @PathVariable Long itemId) {
+        AppResult onlineResult = flashItemAppService.onlineFlashItem(userId, activityId, itemId);
         return ResponseBuilder.with(onlineResult);
     }
 }

@@ -9,16 +9,16 @@ import com.actionworks.flashsale.app.model.result.AppSimpleResult;
 
 
 public interface FlashItemAppService {
-    AppResult publishFlashItem(String token, Long activityId, FlashItemPublishCommand flashItemPublishCommand);
+    AppResult publishFlashItem(Long userId, Long activityId, FlashItemPublishCommand flashItemPublishCommand);
 
-    AppResult onlineFlashItem(String token, Long activityId, Long itemId);
+    AppResult onlineFlashItem(Long userId, Long activityId, Long itemId);
 
-    AppResult offlineFlashItem(String token, Long activityId, Long itemId);
+    AppResult offlineFlashItem(Long userId, Long activityId, Long itemId);
 
-    AppMultiResult<FlashItemDTO> getFlashItems(String token, Long activityId, FlashItemsQuery flashItemsQuery);
+    AppMultiResult<FlashItemDTO> getFlashItems(Long userId, Long activityId, FlashItemsQuery flashItemsQuery);
 
 
-    AppSimpleResult<FlashItemDTO> getFlashItem(String token, Long activityId, Long itemId, Long version);
+    AppSimpleResult<FlashItemDTO> getFlashItem(Long userId, Long activityId, Long itemId, Long version);
 
     AppSimpleResult<FlashItemDTO> getFlashItem(Long itemId);
 

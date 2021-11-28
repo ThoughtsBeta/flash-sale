@@ -1,7 +1,7 @@
 package com.actionworks.flashsale.controller.exception;
 
 import com.actionworks.flashsale.domain.exception.DomainException;
-import com.alibaba.cola.exception.BizException;
+import com.actionworks.flashsale.app.exception.BizException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
@@ -19,7 +19,7 @@ import java.lang.reflect.UndeclaredThrowableException;
 
 import static com.actionworks.flashsale.controller.constants.ExceptionCode.AUTH_ERROR;
 import static com.actionworks.flashsale.controller.constants.ExceptionCode.BIZ_ERROR;
-import static com.actionworks.flashsale.controller.constants.ExceptionCode.SENTINEL_BLOCK;
+import static com.actionworks.flashsale.controller.constants.ExceptionCode.LIMIT_BLOCK;
 
 @ControllerAdvice
 public class BadRequestExceptionHandler extends ResponseEntityExceptionHandler {
@@ -30,8 +30,8 @@ public class BadRequestExceptionHandler extends ResponseEntityExceptionHandler {
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         if (ex instanceof UndeclaredThrowableException) {
             if (((UndeclaredThrowableException) ex).getUndeclaredThrowable() instanceof FlowException) {
-                exceptionResponse.setErrorCode(SENTINEL_BLOCK.getCode());
-                exceptionResponse.setErrorMessage(SENTINEL_BLOCK.getDesc());
+                exceptionResponse.setErrorCode(LIMIT_BLOCK.getCode());
+                exceptionResponse.setErrorMessage(LIMIT_BLOCK.getDesc());
             }
         } else if (ex instanceof BizException || ex instanceof DomainException) {
             exceptionResponse.setErrorCode(BIZ_ERROR.getCode());

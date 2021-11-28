@@ -8,15 +8,15 @@ import com.actionworks.flashsale.app.model.result.AppResult;
 import com.actionworks.flashsale.app.model.result.AppSimpleResult;
 
 public interface FlashActivityAppService {
-    AppMultiResult<FlashActivityDTO> getFlashActivities(String token, FlashActivitiesQuery flashActivitiesQuery);
+    AppMultiResult<FlashActivityDTO> getFlashActivities(Long userId, FlashActivitiesQuery flashActivitiesQuery);
 
-    AppSimpleResult<FlashActivityDTO> getFlashActivity(String token, Long activityId, Long version);
+    AppSimpleResult<FlashActivityDTO> getFlashActivity(Long userId, Long activityId, Long version);
 
-    AppResult publishFlashActivity(String token, FlashActivityPublishCommand flashActivityPublishCommand);
+    AppResult publishFlashActivity(Long userId, FlashActivityPublishCommand flashActivityPublishCommand);
 
-    AppResult modifyFlashActivity(String token, Long activityId, FlashActivityPublishCommand flashActivityPublishCommand);
+    AppResult modifyFlashActivity(Long userId, Long activityId, FlashActivityPublishCommand flashActivityPublishCommand);
 
-    AppResult onlineFlashActivity(String token, Long activityId);
+    AppResult onlineFlashActivity(Long userId, Long activityId);
 
-    AppResult offlineFlashActivity(String token, Long activityId);
+    AppResult offlineFlashActivity(Long userId, Long activityId);
 }

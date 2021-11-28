@@ -2,6 +2,7 @@ package com.actionworks.flashsale.app.model.command;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 
@@ -47,4 +48,17 @@ public class FlashItemPublishCommand {
      */
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
+
+    public boolean validate() {
+        return StringUtils.isNotEmpty(itemTitle)
+                && StringUtils.isNotEmpty(itemSubTitle)
+                && initialStock != null && initialStock > 0
+                && availableStock != null && availableStock > 0
+                && originalPrice != null && originalPrice > 0
+                && flashPrice != null && flashPrice > 0
+                && startTime != null
+                && endTime != null
+                && startTime.before(endTime);
+
+    }
 }

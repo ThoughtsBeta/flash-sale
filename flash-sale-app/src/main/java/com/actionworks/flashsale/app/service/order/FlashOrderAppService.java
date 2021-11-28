@@ -10,12 +10,11 @@ import com.actionworks.flashsale.app.model.result.OrderTaskHandleResult;
 import com.actionworks.flashsale.app.model.result.PlaceOrderResult;
 
 public interface FlashOrderAppService {
-    AppSimpleResult<PlaceOrderResult> placeOrder(String token, FlashPlaceOrderCommand placeOrderCommand);
+    AppSimpleResult<PlaceOrderResult> placeOrder(Long userId, FlashPlaceOrderCommand placeOrderCommand);
 
-    AppSimpleResult<OrderTaskHandleResult> getPlaceOrderTaskResult(String token, Long itemId, String placeOrderTaskId);
+    AppSimpleResult<OrderTaskHandleResult> getPlaceOrderTaskResult(Long userId, Long itemId, String placeOrderTaskId);
 
-    AppMultiResult<FlashOrderDTO> getOrdersByUser(String token, FlashOrdersQuery flashOrdersQuery);
+    AppMultiResult<FlashOrderDTO> getOrdersByUser(Long userId, FlashOrdersQuery flashOrdersQuery);
 
-    AppResult cancelOrder(String token, Long orderId);
-
+    AppResult cancelOrder(Long userId, Long orderId);
 }

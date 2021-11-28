@@ -22,7 +22,7 @@ import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
 import com.actionworks.flashsale.domain.service.FlashOrderDomainService;
 import com.actionworks.flashsale.domain.service.StockDeductionDomainService;
-import com.alibaba.cola.exception.BizException;
+import com.actionworks.flashsale.app.exception.BizException;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

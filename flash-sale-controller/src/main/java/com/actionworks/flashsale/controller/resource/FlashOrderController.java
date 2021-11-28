@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,9 +38,9 @@ public class FlashOrderController {
 
     @PostMapping(value = "/flash-orders")
     @SentinelResource("PlaceOrderResource")
-    public SingleResponse<PlaceOrderResult> placeOrder(@RequestParam String token, @RequestBody FlashPlaceOrderRequest flashPlaceOrderRequest) {
+    public SingleResponse<PlaceOrderResult> placeOrder(@RequestAttribute Long userId, @RequestBody FlashPlaceOrderRequest flashPlaceOrderRequest) {
         FlashPlaceOrderCommand placeOrderCommand = FlashOrderBuilder.toCommand(flashPlaceOrderRequest);
-        AppSimpleResult<PlaceOrderResult> placeOrderResult = flashOrderAppService.placeOrder(token, placeOrderCommand);
+        AppSimpleResult<PlaceOrderResult> placeOrderResult = flashOrderAppService.placeOrder(userId, placeOrderCommand);
         if (!placeOrderResult.isSuccess() || placeOrderResult.getData() == null) {
             return ResponseBuilder.withSingle(placeOrderResult);
         }
@@ -48,8 +49,8 @@ public class FlashOrderController {
 
     @GetMapping(value = "/items/{itemId}/flash-orders/{placeOrderTaskId}")
     @SentinelResource("PlaceOrderTask")
-    public SingleResponse<OrderTaskHandleResult> getPlaceOrderTaskResult(@RequestParam String token, @PathVariable Long itemId, @PathVariable String placeOrderTaskId) {
-        AppSimpleResult<OrderTaskHandleResult> placeOrderTaskResult = flashOrderAppService.getPlaceOrderTaskResult(token, itemId, placeOrderTaskId);
+    public SingleResponse<OrderTaskHandleResult> getPlaceOrderTaskResult(@RequestAttribute Long userId, @PathVariable Long itemId, @PathVariable String placeOrderTaskId) {
+        AppSimpleResult<OrderTaskHandleResult> placeOrderTaskResult = flashOrderAppService.getPlaceOrderTaskResult(userId, itemId, placeOrderTaskId);
         if (!placeOrderTaskResult.isSuccess() || placeOrderTaskResult.getData() == null) {
             return ResponseBuilder.withSingle(placeOrderTaskResult);
         }
@@ -57,7 +58,7 @@ public class FlashOrderController {
     }
 
     @GetMapping(value = "/flash-orders/my")
-    public MultiResponse<FlashOrderResponse> myOrders(@RequestParam String token,
+    public MultiResponse<FlashOrderResponse> myOrders(@RequestAttribute Long userId,
                                                       @RequestParam Integer pageSize,
                                                       @RequestParam Integer pageNumber,
                                                       @RequestParam(required = false) String keyword) {
@@ -66,7 +67,7 @@ public class FlashOrderController {
                 .setPageSize(pageSize)
                 .setPageNumber(pageNumber);
 
-        AppMultiResult<FlashOrderDTO> flashOrdersResult = flashOrderAppService.getOrdersByUser(token, flashOrdersQuery);
+        AppMultiResult<FlashOrderDTO> flashOrdersResult = flashOrderAppService.getOrdersByUser(userId, flashOrdersQuery);
         if (!flashOrdersResult.isSuccess() || flashOrdersResult.getData() == null) {
             return ResponseBuilder.withMulti(flashOrdersResult);
         }
@@ -74,8 +75,8 @@ public class FlashOrderController {
     }
 
     @PutMapping(value = "/flash-orders/{orderId}/cancel")
-    public Response cancelOrder(@RequestParam String token, @PathVariable Long orderId) {
-        AppResult appResult = flashOrderAppService.cancelOrder(token, orderId);
+    public Response cancelOrder(@RequestAttribute Long userId, @PathVariable Long orderId) {
+        AppResult appResult = flashOrderAppService.cancelOrder(userId, orderId);
         return ResponseBuilder.with(appResult);
     }
 }

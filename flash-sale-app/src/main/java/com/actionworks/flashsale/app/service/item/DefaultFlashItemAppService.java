@@ -2,6 +2,7 @@ package com.actionworks.flashsale.app.service.item;
 
 import com.actionworks.flashsale.app.auth.AuthorizationService;
 import com.actionworks.flashsale.app.auth.model.AuthResult;
+import com.actionworks.flashsale.app.exception.BizException;
 import com.actionworks.flashsale.app.model.builder.FlashItemAppBuilder;
 import com.actionworks.flashsale.app.model.command.FlashItemPublishCommand;
 import com.actionworks.flashsale.app.model.dto.FlashItemDTO;
@@ -21,7 +22,6 @@ import com.actionworks.flashsale.domain.model.entity.FlashActivity;
 import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
-import com.alibaba.cola.exception.BizException;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +34,11 @@ import java.util.stream.Collectors;
 import static com.actionworks.flashsale.app.auth.model.ResourceEnum.FLASH_ITEM_CREATE;
 import static com.actionworks.flashsale.app.auth.model.ResourceEnum.FLASH_ITEM_OFFLINE;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ACTIVITY_NOT_FOUND;
+import static com.actionworks.flashsale.app.exception.AppErrorCode.INVALID_PARAMS;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ITEM_NOT_FOUND;
 import static com.actionworks.flashsale.app.model.builder.FlashItemAppBuilder.toDomain;
 import static com.actionworks.flashsale.app.model.builder.FlashItemAppBuilder.toFlashItemsQuery;
-import static com.actionworks.flashsale.controller.exception.ErrorCode.INVALID_TOKEN;
+import static com.actionworks.flashsale.controller.exception.ErrorCode.UNAUTHORIZED_ACCESS;
 
 @Service
 public class DefaultFlashItemAppService implements FlashItemAppService {
@@ -60,15 +61,18 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
     private ItemStockCacheService itemStockCacheService;
 
     @Override
-    public AppResult publishFlashItem(String token, Long activityId, FlashItemPublishCommand itemPublishCommand) {
-        logger.info("itemPublish|发布秒杀品|{},{},{}", token, activityId, JSON.toJSON(itemPublishCommand));
-        AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_CREATE);
+    public AppResult publishFlashItem(Long userId, Long activityId, FlashItemPublishCommand itemPublishCommand) {
+        logger.info("itemPublish|发布秒杀品|{},{},{}", userId, activityId, JSON.toJSON(itemPublishCommand));
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_CREATE);
         if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+            throw new AuthException(UNAUTHORIZED_ACCESS);
+        }
+        if (userId == null || activityId == null || itemPublishCommand == null || !itemPublishCommand.validate()) {
+            throw new BizException(INVALID_PARAMS);
         }
         FlashActivity flashActivity = flashActivityDomainService.getFlashActivity(activityId);
         if (flashActivity == null) {
-            throw new BizException(ACTIVITY_NOT_FOUND.getErrDesc());
+            throw new BizException(ACTIVITY_NOT_FOUND);
         }
         FlashItem flashItem = toDomain(itemPublishCommand);
         flashItem.setActivityId(activityId);
@@ -79,11 +83,14 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
     }
 
     @Override
-    public AppResult onlineFlashItem(String token, Long activityId, Long itemId) {
-        logger.info("itemOnline|上线秒杀品|{},{},{}", token, activityId, itemId);
-        AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_OFFLINE);
+    public AppResult onlineFlashItem(Long userId, Long activityId, Long itemId) {
+        logger.info("itemOnline|上线秒杀品|{},{},{}", userId, activityId, itemId);
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_OFFLINE);
         if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+            throw new AuthException(UNAUTHORIZED_ACCESS);
+        }
+        if (userId == null || activityId == null || itemId == null) {
+            throw new BizException(INVALID_PARAMS);
         }
         flashItemDomainService.onlineFlashItem(itemId);
         logger.info("itemOnline|秒杀品已上线");
@@ -91,11 +98,14 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
     }
 
     @Override
-    public AppResult offlineFlashItem(String token, Long activityId, Long itemId) {
-        logger.info("itemOffline|下线秒杀品|{},{},{}", token, activityId, itemId);
-        AuthResult authResult = authorizationService.auth(token, FLASH_ITEM_OFFLINE);
+    public AppResult offlineFlashItem(Long userId, Long activityId, Long itemId) {
+        logger.info("itemOffline|下线秒杀品|{},{},{}", userId, activityId, itemId);
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_OFFLINE);
         if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+            throw new AuthException(UNAUTHORIZED_ACCESS);
+        }
+        if (userId == null || activityId == null || itemId == null) {
+            throw new BizException(INVALID_PARAMS);
         }
         flashItemDomainService.offlineFlashItem(itemId);
         logger.info("itemOffline|秒杀品已下线");
@@ -103,7 +113,7 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
     }
 
     @Override
-    public AppMultiResult<FlashItemDTO> getFlashItems(String token, Long activityId, FlashItemsQuery flashItemsQuery) {
+    public AppMultiResult<FlashItemDTO> getFlashItems(Long userId, Long activityId, FlashItemsQuery flashItemsQuery) {
         if (flashItemsQuery == null) {
             return AppMultiResult.empty();
         }
@@ -129,13 +139,8 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
 
 
     @Override
-    public AppSimpleResult<FlashItemDTO> getFlashItem(String token, Long activityId, Long itemId, Long version) {
-        logger.info("itemGet|读取秒杀品|{},{},{}", token, activityId, itemId, version);
-        AuthResult authResult = authorizationService.auth(token);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
-        }
-
+    public AppSimpleResult<FlashItemDTO> getFlashItem(Long userId, Long activityId, Long itemId, Long version) {
+        logger.info("itemGet|读取秒杀品|{},{},{}", userId, activityId, itemId, version);
         FlashItemCache flashItemCache = flashItemCacheService.getCachedItem(itemId, version);
         if (!flashItemCache.isExist()) {
             throw new BizException(ITEM_NOT_FOUND.getErrDesc());
@@ -143,7 +148,7 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
         if (flashItemCache.isLater()) {
             return AppSimpleResult.tryLater();
         }
-        updateLatestItemStock(authResult.getUserId(), flashItemCache.getFlashItem());
+        updateLatestItemStock(userId, flashItemCache.getFlashItem());
         FlashItemDTO flashItemDTO = FlashItemAppBuilder.toFlashItemDTO(flashItemCache.getFlashItem());
         flashItemDTO.setVersion(flashItemCache.getVersion());
         return AppSimpleResult.ok(flashItemDTO);

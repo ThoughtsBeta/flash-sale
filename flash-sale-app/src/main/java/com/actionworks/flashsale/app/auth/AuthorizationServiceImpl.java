@@ -41,6 +41,20 @@ public class AuthorizationServiceImpl implements AuthorizationService {
                 .pass();
     }
 
+    @Override
+    public AuthResult auth(Long userId) {
+        return new AuthResult()
+                .setUserId(userId)
+                .pass();
+    }
+
+    @Override
+    public AuthResult auth(Long userId, ResourceEnum resourceEnum) {
+        return new AuthResult()
+                .setUserId(userId)
+                .pass();
+    }
+
     /**
      * 解析令牌
      * Notice：演示需要，这里使用简单的编码，正式开发中应遵循严格的加解密规则

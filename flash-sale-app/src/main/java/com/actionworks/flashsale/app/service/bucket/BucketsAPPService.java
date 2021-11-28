@@ -5,7 +5,7 @@ import com.actionworks.flashsale.app.model.dto.StockBucketSummaryDTO;
 import com.actionworks.flashsale.app.model.result.AppSimpleResult;
 
 public interface BucketsAPPService {
-    AppSimpleResult arrangeStockBuckets(String token, Long itemId, BucketsArrangementCommand arrangementCommand);
+    AppSimpleResult arrangeStockBuckets(Long userId, Long itemId, BucketsArrangementCommand arrangementCommand);
 
-    AppSimpleResult<StockBucketSummaryDTO> getStockBucketsSummary(String token, Long itemId);
+    AppSimpleResult<StockBucketSummaryDTO> getStockBucketsSummary(Long userId, Long itemId);
 }

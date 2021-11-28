@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,9 +27,9 @@ public class BucketsStockController {
     private BucketsAPPService bucketsAPPService;
 
     @PostMapping(value = "/items/{itemId}/buckets")
-    public SingleResponse arrangeStockBuckets(@RequestParam String token, @PathVariable Long itemId, @RequestBody BucketsArrangementRequest bucketsArrangementRequest) {
+    public SingleResponse arrangeStockBuckets(@RequestAttribute Long userId, @PathVariable Long itemId, @RequestBody BucketsArrangementRequest bucketsArrangementRequest) {
         BucketsArrangementCommand bucketsArrangementCommand = BucketsBuilder.toCommand(bucketsArrangementRequest);
-        AppSimpleResult arrangementResult = bucketsAPPService.arrangeStockBuckets(token, itemId, bucketsArrangementCommand);
+        AppSimpleResult arrangementResult = bucketsAPPService.arrangeStockBuckets(userId, itemId, bucketsArrangementCommand);
         if (!arrangementResult.isSuccess()) {
             return SingleResponse.buildFailure(arrangementResult.getCode(), arrangementResult.getMessage());
         }
@@ -36,8 +37,8 @@ public class BucketsStockController {
     }
 
     @GetMapping(value = "/items/{itemId}/buckets")
-    public SingleResponse<StockBucketSummaryDTO> getBuckets(@RequestParam String token, @PathVariable Long itemId) {
-        AppSimpleResult<StockBucketSummaryDTO> bucketsSummaryResult = bucketsAPPService.getStockBucketsSummary(token, itemId);
+    public SingleResponse<StockBucketSummaryDTO> getBuckets(@RequestAttribute Long userId, @PathVariable Long itemId) {
+        AppSimpleResult<StockBucketSummaryDTO> bucketsSummaryResult = bucketsAPPService.getStockBucketsSummary(userId, itemId);
         if (!bucketsSummaryResult.isSuccess() || bucketsSummaryResult.getData() == null) {
             return ResponseBuilder.withSingle(bucketsSummaryResult);
         }

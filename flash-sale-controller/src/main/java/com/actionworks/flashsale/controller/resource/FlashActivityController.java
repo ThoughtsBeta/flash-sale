@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,22 +37,22 @@ public class FlashActivityController {
     private FlashActivityAppService flashActivityAppService;
 
     @PostMapping(value = "/flash-activities")
-    public Response publishFlashActivity(@RequestParam String token, @RequestBody FlashActivityPublishRequest flashActivityPublishRequest) {
+    public Response publishFlashActivity(@RequestAttribute Long userId, @RequestBody FlashActivityPublishRequest flashActivityPublishRequest) {
         FlashActivityPublishCommand activityPublishCommand = FlashActivityBuilder.toCommand(flashActivityPublishRequest);
-        AppResult appResult = flashActivityAppService.publishFlashActivity(token, activityPublishCommand);
+        AppResult appResult = flashActivityAppService.publishFlashActivity(userId, activityPublishCommand);
         return ResponseBuilder.with(appResult);
     }
 
     @PutMapping(value = "/flash-activities/{activityId}")
-    public Response modifyFlashActivity(@RequestParam String token, @PathVariable Long activityId, @RequestBody FlashActivityPublishRequest flashActivityPublishRequest) {
+    public Response modifyFlashActivity(@RequestAttribute Long userId, @PathVariable Long activityId, @RequestBody FlashActivityPublishRequest flashActivityPublishRequest) {
         FlashActivityPublishCommand activityPublishCommand = FlashActivityBuilder.toCommand(flashActivityPublishRequest);
-        AppResult appResult = flashActivityAppService.modifyFlashActivity(token, activityId, activityPublishCommand);
+        AppResult appResult = flashActivityAppService.modifyFlashActivity(userId, activityId, activityPublishCommand);
         return ResponseBuilder.with(appResult);
     }
 
     @GetMapping(value = "/flash-activities")
     @SentinelResource("GetActivitiesResource")
-    public MultiResponse<FlashActivityResponse> getFlashActivities(@RequestParam String token,
+    public MultiResponse<FlashActivityResponse> getFlashActivities(@RequestAttribute Long userId,
                                                                    @RequestParam Integer pageSize,
                                                                    @RequestParam Integer pageNumber,
                                                                    @RequestParam(required = false) String keyword) {
@@ -60,13 +61,13 @@ public class FlashActivityController {
                 .setPageSize(pageSize)
                 .setPageNumber(pageNumber);
 
-        AppMultiResult<FlashActivityDTO> flashActivitiesResult = flashActivityAppService.getFlashActivities(token, flashActivitiesQuery);
+        AppMultiResult<FlashActivityDTO> flashActivitiesResult = flashActivityAppService.getFlashActivities(userId, flashActivitiesQuery);
         return ResponseBuilder.withMulti(flashActivitiesResult);
     }
 
     @GetMapping(value = "/flash-activities/online")
     @SentinelResource("GetOnlineActivitiesResource")
-    public MultiResponse<FlashActivityResponse> getOnlineFlashActivities(@RequestParam String token,
+    public MultiResponse<FlashActivityResponse> getOnlineFlashActivities(@RequestAttribute Long userId,
                                                                          @RequestParam Integer pageSize,
                                                                          @RequestParam Integer pageNumber,
                                                                          @RequestParam(required = false) String keyword) {
@@ -76,7 +77,7 @@ public class FlashActivityController {
                 .setPageNumber(pageNumber)
                 .setStatus(FlashActivityStatus.ONLINE.getCode());
 
-        AppMultiResult<FlashActivityDTO> flashActivitiesResult = flashActivityAppService.getFlashActivities(token, flashActivitiesQuery);
+        AppMultiResult<FlashActivityDTO> flashActivitiesResult = flashActivityAppService.getFlashActivities(userId, flashActivitiesQuery);
         if (!flashActivitiesResult.isSuccess() || flashActivitiesResult.getData() == null) {
             return ResponseBuilder.withMulti(flashActivitiesResult);
         }
@@ -85,10 +86,10 @@ public class FlashActivityController {
 
     @GetMapping(value = "/flash-activities/{activityId}")
     @SentinelResource("GetActivityResource")
-    public SingleResponse<FlashActivityResponse> getFlashActivity(@RequestParam String token,
+    public SingleResponse<FlashActivityResponse> getFlashActivity(@RequestAttribute Long userId,
                                                                   @PathVariable Long activityId,
                                                                   @RequestParam(required = false) Long version) {
-        AppSimpleResult<FlashActivityDTO> flashActivityResult = flashActivityAppService.getFlashActivity(token, activityId, version);
+        AppSimpleResult<FlashActivityDTO> flashActivityResult = flashActivityAppService.getFlashActivity(userId, activityId, version);
         if (!flashActivityResult.isSuccess() || flashActivityResult.getData() == null) {
             return ResponseBuilder.withSingle(flashActivityResult);
         }
@@ -97,14 +98,14 @@ public class FlashActivityController {
     }
 
     @PutMapping(value = "/flash-activities/{activityId}/online")
-    public Response onlineFlashActivity(@RequestParam String token, @PathVariable Long activityId) {
-        AppResult appResult = flashActivityAppService.onlineFlashActivity(token, activityId);
+    public Response onlineFlashActivity(@RequestAttribute Long userId, @PathVariable Long activityId) {
+        AppResult appResult = flashActivityAppService.onlineFlashActivity(userId, activityId);
         return ResponseBuilder.with(appResult);
     }
 
     @PutMapping(value = "/flash-activities/{activityId}/offline")
-    public Response offlineFlashActivity(@RequestParam String token, @PathVariable Long activityId) {
-        AppResult appResult = flashActivityAppService.offlineFlashActivity(token, activityId);
+    public Response offlineFlashActivity(@RequestAttribute Long userId, @PathVariable Long activityId) {
+        AppResult appResult = flashActivityAppService.offlineFlashActivity(userId, activityId);
         return ResponseBuilder.with(appResult);
     }
 }

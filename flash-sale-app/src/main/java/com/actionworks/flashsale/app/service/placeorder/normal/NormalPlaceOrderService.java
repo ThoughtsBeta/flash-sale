@@ -1,13 +1,14 @@
 package com.actionworks.flashsale.app.service.placeorder.normal;
 
-import com.actionworks.flashsale.app.service.item.FlashItemAppService;
-import com.actionworks.flashsale.app.service.placeorder.PlaceOrderService;
+import com.actionworks.flashsale.app.exception.BizException;
 import com.actionworks.flashsale.app.model.command.FlashPlaceOrderCommand;
 import com.actionworks.flashsale.app.model.result.PlaceOrderResult;
+import com.actionworks.flashsale.app.service.item.FlashItemAppService;
+import com.actionworks.flashsale.app.service.placeorder.PlaceOrderService;
 import com.actionworks.flashsale.app.service.stock.ItemStockCacheService;
+import com.actionworks.flashsale.app.util.MultiPlaceOrderTypesCondition;
 import com.actionworks.flashsale.app.util.OrderNoGenerateContext;
 import com.actionworks.flashsale.app.util.OrderNoGenerateService;
-import com.actionworks.flashsale.app.util.MultiPlaceOrderTypesCondition;
 import com.actionworks.flashsale.domain.model.StockDeduction;
 import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.model.entity.FlashOrder;
@@ -15,7 +16,6 @@ import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
 import com.actionworks.flashsale.domain.service.FlashOrderDomainService;
 import com.actionworks.flashsale.domain.service.StockDeductionDomainService;
-import com.alibaba.cola.exception.BizException;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import static com.actionworks.flashsale.app.exception.AppErrorCode.INVALID_PARAMS;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.PLACE_ORDER_FAILED;
 import static com.actionworks.flashsale.app.model.builder.FlashOrderAppBuilder.toDomain;
 
@@ -55,6 +56,9 @@ public class NormalPlaceOrderService implements PlaceOrderService {
     @Override
     public PlaceOrderResult doPlaceOrder(Long userId, FlashPlaceOrderCommand placeOrderCommand) {
         logger.info("placeOrder|开始下单|{},{}", userId, JSON.toJSONString(placeOrderCommand));
+        if (userId == null || placeOrderCommand == null || !placeOrderCommand.validateParams()) {
+            throw new BizException(INVALID_PARAMS);
+        }
         boolean isActivityAllowPlaceOrder = flashActivityDomainService.isAllowPlaceOrderOrNot(placeOrderCommand.getActivityId());
         if (!isActivityAllowPlaceOrder) {
             logger.info("placeOrder|秒杀活动下单规则校验未通过|{},{}", userId, placeOrderCommand.getActivityId());

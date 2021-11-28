@@ -1,8 +1,7 @@
 package com.actionworks.flashsale.app.service.order;
 
 import com.actionworks.flashsale.app.auth.AuthorizationService;
-import com.actionworks.flashsale.app.auth.model.AuthResult;
-import com.actionworks.flashsale.app.service.placeorder.PlaceOrderService;
+import com.actionworks.flashsale.app.exception.BizException;
 import com.actionworks.flashsale.app.model.builder.FlashOrderAppBuilder;
 import com.actionworks.flashsale.app.model.command.FlashPlaceOrderCommand;
 import com.actionworks.flashsale.app.model.dto.FlashOrderDTO;
@@ -13,9 +12,9 @@ import com.actionworks.flashsale.app.model.result.AppSimpleResult;
 import com.actionworks.flashsale.app.model.result.OrderTaskHandleResult;
 import com.actionworks.flashsale.app.model.result.PlaceOrderResult;
 import com.actionworks.flashsale.app.security.SecurityService;
+import com.actionworks.flashsale.app.service.placeorder.PlaceOrderService;
 import com.actionworks.flashsale.app.service.placeorder.queued.QueuedPlaceOrderService;
 import com.actionworks.flashsale.app.service.stock.ItemStockCacheService;
-import com.actionworks.flashsale.controller.exception.AuthException;
 import com.actionworks.flashsale.domain.model.PageResult;
 import com.actionworks.flashsale.domain.model.StockDeduction;
 import com.actionworks.flashsale.domain.model.entity.FlashOrder;
@@ -23,8 +22,8 @@ import com.actionworks.flashsale.domain.service.FlashOrderDomainService;
 import com.actionworks.flashsale.domain.service.StockDeductionDomainService;
 import com.actionworks.flashsale.lock.DistributedLock;
 import com.actionworks.flashsale.lock.DistributedLockFactoryService;
-import com.alibaba.cola.exception.BizException;
 import com.alibaba.fastjson.JSON;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -36,12 +35,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.actionworks.flashsale.app.exception.AppErrorCode.FREQUENTLY_ERROR;
+import static com.actionworks.flashsale.app.exception.AppErrorCode.INVALID_PARAMS;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ORDER_CANCEL_FAILED;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ORDER_NOT_FOUND;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ORDER_TYPE_NOT_SUPPORT;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.PLACE_ORDER_FAILED;
 import static com.actionworks.flashsale.app.model.builder.FlashOrderAppBuilder.toFlashOrdersQuery;
-import static com.actionworks.flashsale.controller.exception.ErrorCode.INVALID_TOKEN;
 import static com.actionworks.flashsale.util.StringUtil.link;
 
 @Service
@@ -66,31 +65,31 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
 
     @Override
     @Transactional
-    public AppSimpleResult<PlaceOrderResult> placeOrder(String token, FlashPlaceOrderCommand placeOrderCommand) {
-        AuthResult authResult = authorizationService.auth(token);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+    public AppSimpleResult<PlaceOrderResult> placeOrder(Long userId, FlashPlaceOrderCommand placeOrderCommand) {
+        logger.info("placeOrder|下单|{},{}", userId, JSON.toJSONString(placeOrderCommand));
+        if (userId == null || placeOrderCommand == null || !placeOrderCommand.validateParams()) {
+            throw new BizException(INVALID_PARAMS);
         }
-        String placeOrderLockKey = getPlaceOrderLockKey(authResult);
+        String placeOrderLockKey = getPlaceOrderLockKey(userId);
         DistributedLock placeOrderLock = lockFactoryService.getDistributedLock(placeOrderLockKey);
         try {
             boolean isLockSuccess = placeOrderLock.tryLock(5, 5, TimeUnit.SECONDS);
             if (!isLockSuccess) {
                 return AppSimpleResult.failed(FREQUENTLY_ERROR.getErrCode(), FREQUENTLY_ERROR.getErrDesc());
             }
-            boolean isPassRiskInspect = securityService.inspectRisksByPolicy(authResult.getUserId());
+            boolean isPassRiskInspect = securityService.inspectRisksByPolicy(userId);
             if (!isPassRiskInspect) {
-                logger.info("placeOrder|综合风控检验未通过|{}", authResult.getUserId());
+                logger.info("placeOrder|综合风控检验未通过|{}", userId);
                 return AppSimpleResult.failed(PLACE_ORDER_FAILED);
             }
-            PlaceOrderResult placeOrderResult = placeOrderService.doPlaceOrder(authResult.getUserId(), placeOrderCommand);
+            PlaceOrderResult placeOrderResult = placeOrderService.doPlaceOrder(userId, placeOrderCommand);
             if (!placeOrderResult.isSuccess()) {
                 return AppSimpleResult.failed(placeOrderResult.getCode(), placeOrderResult.getMessage());
             }
-            logger.info("placeOrder|下单完成|{}", authResult.getUserId());
+            logger.info("placeOrder|下单完成|{}", userId);
             return AppSimpleResult.ok(placeOrderResult);
         } catch (Exception e) {
-            logger.error("placeOrder|下单失败|{},{}", authResult.getUserId(), JSON.toJSONString(placeOrderCommand), e);
+            logger.error("placeOrder|下单失败|{},{}", userId, JSON.toJSONString(placeOrderCommand), e);
             return AppSimpleResult.failed(PLACE_ORDER_FAILED);
         } finally {
             placeOrderLock.forceUnlock();
@@ -98,14 +97,13 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
     }
 
     @Override
-    public AppSimpleResult<OrderTaskHandleResult> getPlaceOrderTaskResult(String token, Long itemId, String placeOrderTaskId) {
-        AuthResult authResult = authorizationService.auth(token);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+    public AppSimpleResult<OrderTaskHandleResult> getPlaceOrderTaskResult(Long userId, Long itemId, String placeOrderTaskId) {
+        if (userId == null || itemId == null || StringUtils.isEmpty(placeOrderTaskId)) {
+            throw new BizException(INVALID_PARAMS);
         }
         if (placeOrderService instanceof QueuedPlaceOrderService) {
             QueuedPlaceOrderService queuedPlaceOrderService = (QueuedPlaceOrderService) placeOrderService;
-            OrderTaskHandleResult orderTaskHandleResult = queuedPlaceOrderService.getPlaceOrderResult(authResult.getUserId(), itemId, placeOrderTaskId);
+            OrderTaskHandleResult orderTaskHandleResult = queuedPlaceOrderService.getPlaceOrderResult(userId, itemId, placeOrderTaskId);
             if (!orderTaskHandleResult.isSuccess()) {
                 return AppSimpleResult.failed(orderTaskHandleResult.getCode(), orderTaskHandleResult.getMessage(), orderTaskHandleResult);
             }
@@ -116,12 +114,8 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
     }
 
     @Override
-    public AppMultiResult<FlashOrderDTO> getOrdersByUser(String token, FlashOrdersQuery flashOrdersQuery) {
-        AuthResult authResult = authorizationService.auth(token);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
-        }
-        PageResult<FlashOrder> flashOrderPageResult = flashOrderDomainService.getOrdersByUser(authResult.getUserId(), toFlashOrdersQuery(flashOrdersQuery));
+    public AppMultiResult<FlashOrderDTO> getOrdersByUser(Long userId, FlashOrdersQuery flashOrdersQuery) {
+        PageResult<FlashOrder> flashOrderPageResult = flashOrderDomainService.getOrdersByUser(userId, toFlashOrdersQuery(flashOrdersQuery));
 
         List<FlashOrderDTO> flashOrderDTOList = flashOrderPageResult.getData().stream().map(FlashOrderAppBuilder::toFlashOrderDTO).collect(Collectors.toList());
         return AppMultiResult.of(flashOrderDTOList, flashOrderPageResult.getTotal());
@@ -129,17 +123,16 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
 
     @Override
     @Transactional
-    public AppResult cancelOrder(String token, Long orderId) {
-        logger.info("cancelOrder|取消订单|{},{}", token, orderId);
-        AuthResult authResult = authorizationService.auth(token);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(INVALID_TOKEN);
+    public AppResult cancelOrder(Long userId, Long orderId) {
+        logger.info("cancelOrder|取消订单|{},{}", userId, orderId);
+        if (userId == null || orderId == null) {
+            throw new BizException(INVALID_PARAMS);
         }
-        FlashOrder flashOrder = flashOrderDomainService.getOrder(authResult.getUserId(), orderId);
+        FlashOrder flashOrder = flashOrderDomainService.getOrder(userId, orderId);
         if (flashOrder == null) {
-            throw new BizException(ORDER_NOT_FOUND.getErrDesc());
+            throw new BizException(ORDER_NOT_FOUND);
         }
-        boolean cancelSuccess = flashOrderDomainService.cancelOrder(authResult.getUserId(), orderId);
+        boolean cancelSuccess = flashOrderDomainService.cancelOrder(userId, orderId);
         if (!cancelSuccess) {
             logger.info("cancelOrder|订单取消失败|{}", orderId);
             return AppResult.buildFailure(ORDER_CANCEL_FAILED);
@@ -151,18 +144,18 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
         boolean stockRecoverSuccess = stockDeductionDomainService.increaseItemStock(stockDeduction);
         if (!stockRecoverSuccess) {
             logger.info("cancelOrder|库存恢复失败|{}", orderId);
-            throw new BizException(ORDER_CANCEL_FAILED.getErrDesc());
+            throw new BizException(ORDER_CANCEL_FAILED);
         }
         boolean stockInRedisRecoverSuccess = itemStockCacheService.increaseItemStock(stockDeduction);
         if (!stockInRedisRecoverSuccess) {
             logger.info("cancelOrder|Redis库存恢复失败|{}", orderId);
-            throw new BizException(ORDER_CANCEL_FAILED.getErrDesc());
+            throw new BizException(ORDER_CANCEL_FAILED);
         }
         logger.info("cancelOrder|订单取消成功|{}", orderId);
         return AppResult.buildSuccess();
     }
 
-    private String getPlaceOrderLockKey(AuthResult authResult) {
-        return link(PLACE_ORDER_LOCK_KEY, authResult.getUserId());
+    private String getPlaceOrderLockKey(Long userId) {
+        return link(PLACE_ORDER_LOCK_KEY, userId);
     }
 }

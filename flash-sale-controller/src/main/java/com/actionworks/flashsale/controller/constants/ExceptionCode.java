@@ -1,7 +1,7 @@
 package com.actionworks.flashsale.controller.constants;
 
 public enum ExceptionCode {
-    SENTINEL_BLOCK("01", "操作频繁，请稍后再试"),
+    LIMIT_BLOCK("01", "操作频繁，请稍后再试"),
     INTERNAL_ERROR("02", "服务器开小差"),
     BIZ_ERROR("03", "客户端参数或操作错误"),
     AUTH_ERROR("04", "鉴权错误");
