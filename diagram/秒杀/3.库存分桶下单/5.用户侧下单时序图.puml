@@ -1,5 +1,5 @@
 @startuml
-!include ../../theme/alihealth-uml-theme.iuml
+!include ../../theme/thoughts-uml-theme.iuml
 autonumber
 skinparam shadowing false
 skinparam BoxPadding 25

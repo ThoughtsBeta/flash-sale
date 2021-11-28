@@ -1,5 +1,5 @@
 @startuml
-!include ../../theme/alihealth-uml-theme.iuml
+!include ../../theme/thoughts-uml-theme.iuml
 
 skinparam BoxPadding 15
 skinparam Padding 5
@@ -9,7 +9,7 @@ Package 库存分桶 <<Frame>> #F2F2F2 {
     interface "BucketsAPPService"{
         分桶应用服务
         AppSimpleResult arrangeStockBuckets(token,itemId,arrangementCommand):库存分桶编排
-        AppSimpleResult<StockBucketSummaryDTO> getStockBucketsSummary(String token, Long itemId):获取库存详情
+        AppSimpleResult<StockBucketSummaryDTO> getStockBucketsSummary(Long userId, Long itemId):获取库存详情
     }
     interface BucketsArrangementService {
         分桶编排服务
