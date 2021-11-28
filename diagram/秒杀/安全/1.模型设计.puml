@@ -1,0 +1,95 @@
+@startuml
+!include ../../theme/thoughts-uml-theme.iuml
+
+skinparam BoxPadding 15
+skinparam Padding 5
+
+Package 安全核心 <<Frame>> #F2F2F2 {
+
+    interface SecurityRuleChainService {
+        链式安全规则服务
+        boolean run(HttpServletRequest request, HttpServletResponse response):运行安全规则
+        int getOrder():执行顺序
+    }
+    class SecurityRuleChainServiceBase {
+        链式安全规则服务抽象基类
+        void init():显示服务初始化信息
+        abstract String getName():服务名称
+    }
+
+    class DefaultRuleChainService extends SecurityRuleChainServiceBase implements SecurityRuleChainService {
+        默认安全规则服务
+    }
+    class AccountRuleChainService extends SecurityRuleChainServiceBase implements SecurityRuleChainService {
+        账号安全规则服务
+    }
+    class IPRuleChainService extends SecurityRuleChainServiceBase implements SecurityRuleChainService {
+        IP安全规则服务
+    }
+    class ResourcePathRuleChainService extends SecurityRuleChainServiceBase implements SecurityRuleChainService {
+        资源安全规则服务
+    }
+    class BusinessRuleChainService extends SecurityRuleChainServiceBase implements SecurityRuleChainService {
+        业务自定义安全规则服务
+    }
+    class CloudSolutionRuleChainService extends SecurityRuleChainServiceBase implements SecurityRuleChainService {
+        云安全方案集成服务（第三方）
+    }
+    class OtherPathRuleChainService extends SecurityRuleChainServiceBase implements SecurityRuleChainService {
+        ...其他扩展安全规则服务
+    }
+
+    class Rule {
+        boolean enable = true;
+        String path:资源路径
+        int windowPeriod:滑动窗口周期
+        int windowSize:滑动窗口大小
+    }
+
+    class PathRule extends Rule {
+        List<Rule> urlPaths:受保护的资源
+    }
+
+    class SecurityRulesConfiguration {
+        boolean enable:是否启用安全规则
+        Rule ipRule:IP安全规则配置
+        PathRule pathRule:资源路径安全规则配置
+        Rule accountRule:账号安全规则配置
+    }
+
+    interface SlidingWindowLimitService {
+        滑动窗口校验服务
+        boolean pass(String userActionKey, int period, int size):窗口校验
+    }
+    class DefaultSlidingWindowLimitService implements SlidingWindowLimitService {
+        默认基于Redis ZSet的滑动窗口校验服务
+    }
+ }
+
+interface HandlerInterceptor {
+    请求拦截服务
+    preHandle(HttpServletRequest request, HttpServletResponse response, Object handler):前置拦截
+}
+
+class SecurityRulesInterceptor implements HandlerInterceptor {
+    安全规则请求拦截服务preHandle(HttpServletRequest request, HttpServletResponse response, Object handler):前置拦截
+    preHandle(HttpServletRequest request, HttpServletResponse response, Object handler):按照顺序调用各安全规则服务
+}
+
+IPRuleChainService ..>SlidingWindowLimitService
+IPRuleChainService ..>SecurityRulesConfiguration
+
+ResourcePathRuleChainService ..>SlidingWindowLimitService
+ResourcePathRuleChainService ..>SecurityRulesConfiguration
+ResourcePathRuleChainService ..>AuthorizationService
+
+AccountRuleChainService ..>SlidingWindowLimitService
+AccountRuleChainService ..>SecurityRulesConfiguration
+AccountRuleChainService ..>AuthorizationService
+
+SecurityRulesInterceptor ..>SecurityRuleChainService
+
+SecurityRulesConfiguration ..>Rule
+SecurityRulesConfiguration ..>PathRule
+
+@enduml

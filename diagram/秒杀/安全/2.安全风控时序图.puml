@@ -1,0 +1,75 @@
+@startuml
+!include ../../theme/thoughts-uml-theme.iuml
+autonumber
+skinparam shadowing false
+skinparam BoxPadding 25
+skinparam Padding 5
+skinparam minClassWidth 170
+scale 13500 height
+
+actor User
+participant SecurityRulesInterceptor
+box "安全核心" #DBD9DE
+    participant IPRuleChainService
+    participant AccountRuleChainService
+    participant ResourcePathRuleChainService
+    participant BusinessRuleChainService
+    participant CloudSolutionRuleChainService
+    participant ...RuleChainService
+end box
+
+participant AuthInterceptor
+participant Resource
+
+User->SecurityRulesInterceptor:进入安全拦截器
+activate SecurityRulesInterceptor
+group 安全核心流程
+
+    SecurityRulesInterceptor -> IPRuleChainService:调用IP安全检测
+    IPRuleChainService --> SecurityRulesInterceptor
+    alt #FA5B87 IP安全未通过
+        SecurityRulesInterceptor -> User
+    end
+
+    SecurityRulesInterceptor -> AccountRuleChainService:调用账号安全检测
+    AccountRuleChainService --> SecurityRulesInterceptor
+    alt #FA5B87 账号安全未通过
+        SecurityRulesInterceptor -> User
+    end
+
+    SecurityRulesInterceptor -> ResourcePathRuleChainService:调用资源安全检测
+    ResourcePathRuleChainService --> SecurityRulesInterceptor
+    alt #FA5B87 资源安全未通过
+        SecurityRulesInterceptor -> User
+    end
+
+    SecurityRulesInterceptor -> IPRuleChainService:调用IP安全检测
+    IPRuleChainService --> SecurityRulesInterceptor
+    alt #FA5B87 IP未通过
+        SecurityRulesInterceptor -> User
+    end
+
+    SecurityRulesInterceptor -> BusinessRuleChainService:调用业务自定义安全
+    BusinessRuleChainService --> SecurityRulesInterceptor
+    alt #FA5B87 业务自定义安全未通过
+        SecurityRulesInterceptor -> User
+    end
+    SecurityRulesInterceptor -> CloudSolutionRuleChainService:第三方安全服务
+    CloudSolutionRuleChainService --> SecurityRulesInterceptor
+    alt #FA5B87 第三方安全服务未通过
+        SecurityRulesInterceptor -> User
+    end
+end
+
+SecurityRulesInterceptor -> AuthInterceptor:账号与授权校验
+deactivate  SecurityRulesInterceptor
+
+activate  AuthInterceptor
+AuthInterceptor --> SecurityRulesInterceptor:账号与授权校验结果
+
+AuthInterceptor -> Resource:调用目标资源
+deactivate  AuthInterceptor
+Resource --> User:返回资源调用结果
+
+@enduml
+
