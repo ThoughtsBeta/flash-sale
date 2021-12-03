@@ -1,3 +1,7 @@
+[![CircleCI](https://circleci.com/gh/ThoughtsBeta/flash-sale/tree/master.svg?style=svg&circle-token=1d98eb40c37d2519d48180e9ed8d9db4e78ff358)](https://circleci.com/gh/ThoughtsBeta/flash-sale/tree/master)
+
+---
+
 # Flash-sale
 
 本项目的工程结构如下。更多详情介绍请阅读小册章节。
