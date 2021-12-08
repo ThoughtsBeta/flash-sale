@@ -1,0 +1,182 @@
+version: '3.2'
+
+networks:
+  thoughts-beta-cluster-middlewares:
+    driver: overlay
+    attachable: true
+
+volumes:
+  prometheus_data: {}
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    volumes:
+    - ./data/db_data:/var/lib/mysql
+    - ./config/mysql/init:/docker-entrypoint-initdb.d/
+    command: [
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci',
+      '--default-time-zone=+8:00'
+    ]
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: flash_sale
+      MYSQL_USER: thoughts-beta
+      MYSQL_PASSWORD: thoughts-beta
+    ports:
+    - 3306:3306
+    networks:
+    - thoughts-beta-cluster-middlewares
+    restart: on-failure
+
+  redis:
+    container_name: redis
+    image: redislabs/redismod:latest
+    ports:
+    - 6379:6379
+    networks:
+    - thoughts-beta-cluster-middlewares
+    restart: on-failure
+
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    environment:
+    - REDIS_HOSTS=local:redis:6379
+    ports:
+    - 8082:8081
+    networks:
+    - thoughts-beta-cluster-middlewares
+    restart: on-failure
+
+  sentinel:
+    image: bladex/sentinel-dashboard
+    container_name: sentinel
+    ports:
+    - 8858:8858
+    networks:
+    - thoughts-beta-cluster-middlewares
+    restart: on-failure
+
+  nacos:
+    image: nacos/nacos-server:2.0.3
+    container_name: nacos-standalone-mysql
+    env_file:
+    - ./config/nacos/nacos-standlone-mysql.env
+    volumes:
+    - ./data/nacos_logs/:/home/nacos/logs
+    - ./config/nacos/custom.properties:/home/nacos/init.d/custom.properties
+    ports:
+    - 8848:8848
+    - 9848:9848
+    - 9555:9555
+    depends_on:
+    - mysql
+    restart: on-failure
+    networks:
+    - thoughts-beta-cluster-middlewares
+  rmqnamesrv:
+    image: apacherocketmq/rocketmq:4.5.0
+    container_name: rmqnamesrv
+    ports:
+    - 9876:9876
+    volumes:
+    - ./data/rocketmq/logs:/home/rocketmq/logs
+    - ./data/rocketmq/store:/home/rocketmq/store
+    command: sh mqnamesrv
+    networks:
+    - thoughts-beta-cluster-middlewares
+    restart: on-failure
+
+  rmqbroker:
+    image: apacherocketmq/rocketmq:4.5.0
+    container_name: rmqbroker
+    ports:
+    - 10909:10909
+    - 10911:10911
+    - 10912:10912
+    volumes:
+    - ./data/rocketmq/logs:/home/rocketmq/logs
+    - ./data/rocketmq/store:/home/rocketmq/store
+    - ./config/rocketmq/broker.conf:/home/rocketmq/rocketmq-4.5.0/conf/broker.conf
+    command: sh mqbroker -n rmqnamesrv:9876 -c ../conf/broker.conf
+    depends_on:
+    - rmqnamesrv
+    environment:
+    - JAVA_HOME=/usr/lib/jvm/jre
+    networks:
+    - thoughts-beta-cluster-middlewares
+    restart: on-failure
+
+  elasticsearch:
+    image: elasticsearch:7.14.2
+    container_name: elasticsearch
+    volumes:
+    - ./config/elk/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+    - "9200:9200"
+    - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      discovery.type: single-node
+    networks:
+    - thoughts-beta-cluster-middlewares
+    restart: on-failure
+
+  logstash:
+    image: logstash:7.14.2
+    container_name: logstash
+    volumes:
+    - ./config/elk/logstash.yml:/usr/share/logstash/config/logstash.yml
+    - ./config/elk/pipeline:/usr/share/logstash/pipeline
+    ports:
+    - "5044:5044"
+    - "5000:5000/tcp"
+    - "5000:5000/udp"
+    - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+    - thoughts-beta-cluster-middlewares
+    depends_on:
+    - elasticsearch
+    restart: on-failure
+
+  kibana:
+    image: kibana:7.14.2
+    container_name: kibana
+    volumes:
+    - ./config/elk/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+    - "5601:5601"
+    networks:
+    - thoughts-beta-cluster-middlewares
+    depends_on:
+    - elasticsearch
+    restart: on-failure
+  portainer:
+    image: portainer/portainer-ce:2.6.0
+    ports:
+    - "9443:9443"
+    - "9000:9000"
+    - "8000:8000"
+    volumes:
+    - ./data/portainer_data:/data
+    - /var/run/docker.sock:/var/run/docker.sock
+    - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+    - thoughts-beta-cluster-middlewares
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+    restart: on-failure
+
+
+
+
+

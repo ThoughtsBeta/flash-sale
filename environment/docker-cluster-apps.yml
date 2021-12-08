@@ -1,0 +1,32 @@
+version: '3.2'
+
+networks:
+  thoughts-beta-cluster-apps:
+    driver: overlay
+
+volumes:
+  prometheus_data: {}
+services:
+  flash-sale-app:
+    image: flash-sale-app
+    container_name: flash-sale-app
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - 8090:8090
+    networks:
+      - thoughts-beta-cluster-apps
+    restart: on-failure
+  flash-sale-gateway:
+    image: flash-sale-gateway
+    container_name: flash-sale-gateway
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - 8080:8080
+    networks:
+      - thoughts-beta-cluster-apps
+    restart: on-failure
+
+
+
