@@ -20,9 +20,10 @@
             <totalSizeCap>20GB</totalSizeCap>
         </rollingPolicy>
     </appender>
+    <conversionRule conversionWord="ip" converterClass="com.actionworks.flashsale.util.IPConverterConfig" />
 
     <appender name="LOG_STASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>127.0.0.1:5044</destination>
+        <destination>30.203.118.10:5044</destination>
         <queueSize>1048576</queueSize>
         <encoder charset="UTF-8" class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
@@ -33,6 +34,7 @@
                     <pattern>
                         {
                         "app_date": "%d{yyyy-MM-dd HH:mm:ss:SSS}",
+                        "app_ip": "%ip",
                         "app_thread": "%thread",
                         "app_traceId": "%X{traceId}",
                         "app_level": "%level",
@@ -49,7 +51,7 @@
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <charset>utf8</charset>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS}|%thread|%X{traceId}|%level|%logger{36}|%msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss:SSS}|%ip|%thread|%X{traceId}|%level|%logger{36}|%msg%n</pattern>
         </encoder>
     </appender>
 
