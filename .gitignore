@@ -29,4 +29,9 @@ build/
 
 ### VS Code ###
 .vscode/
-/environment/data/
+/environment/data/db_data/**
+/environment/data/nacos_logs/**
+/environment/data/portainer_data/**
+/environment/data/prometheus_data/**
+/environment/data/rocketmq/**
+/environment/data/standalone-logs/**
