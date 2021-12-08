@@ -1,11 +1,11 @@
 package com.actionworks.flashsale.controller.resource;
 
-import com.actionworks.flashsale.app.service.item.FlashItemAppService;
 import com.actionworks.flashsale.app.model.dto.FlashItemDTO;
 import com.actionworks.flashsale.app.model.query.FlashItemsQuery;
 import com.actionworks.flashsale.app.model.result.AppMultiResult;
 import com.actionworks.flashsale.app.model.result.AppResult;
 import com.actionworks.flashsale.app.model.result.AppSimpleResult;
+import com.actionworks.flashsale.app.service.item.FlashItemAppService;
 import com.actionworks.flashsale.controller.model.builder.ResponseBuilder;
 import com.actionworks.flashsale.controller.model.request.FlashItemPublishRequest;
 import com.actionworks.flashsale.controller.model.response.FlashItemResponse;
@@ -82,6 +82,9 @@ public class FlashItemController {
                                                           @PathVariable Long activityId,
                                                           @PathVariable Long itemId,
                                                           @RequestParam(required = false) Long version) {
+        if (true) {
+            throw new NullPointerException();
+        }
         AppSimpleResult<FlashItemDTO> flashItemResult = flashItemAppService.getFlashItem(userId, activityId, itemId, version);
         if (!flashItemResult.isSuccess() || flashItemResult.getData() == null) {
             return ResponseBuilder.withSingle(flashItemResult);
