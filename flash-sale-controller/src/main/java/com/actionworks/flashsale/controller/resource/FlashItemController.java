@@ -82,9 +82,6 @@ public class FlashItemController {
                                                           @PathVariable Long activityId,
                                                           @PathVariable Long itemId,
                                                           @RequestParam(required = false) Long version) {
-        if (true) {
-            throw new NullPointerException();
-        }
         AppSimpleResult<FlashItemDTO> flashItemResult = flashItemAppService.getFlashItem(userId, activityId, itemId, version);
         if (!flashItemResult.isSuccess() || flashItemResult.getData() == null) {
             return ResponseBuilder.withSingle(flashItemResult);
