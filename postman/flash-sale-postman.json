@@ -1,878 +1,1808 @@
 {
 	"info": {
-		"_postman_id": "39494577-0b11-4dd5-ae3a-39ba38ab0e4a",
+		"_postman_id": "7a4390d3-5fad-4162-9149-eee76130b026",
 		"name": "秒杀",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "活动",
+			"name": "单应用调试",
 			"item": [
 				{
-					"name": "发布新的活动",
-					"event": [
+					"name": "活动",
+					"item": [
 						{
-							"listen": "prerequest",
-							"script": {
-								"id": "d70f18a2-e39c-4213-b4fd-efcf1ad265ee",
-								"exec": [
-									"const moment = require('moment');",
-									"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+							"name": "发布新的活动",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "5facc504-1291-4e35-984b-d812e8321785",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
 								],
-								"type": "text/javascript"
-							}
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"activityName\": \"示例活动{{currentTime}}\",\n    \"activityDesc\": \"国庆节活动描述。。。\",\n    \"startTime\": \"2021-09-07 20:54:11\",\n    \"endTime\": \"2021-12-09 20:54:21\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8090/api/flash-activities?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"flash-activities"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "编辑指定活动",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "d5ff51c0-35f7-42c6-b822-b894606a30e1",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"activityName\": \"示例活动{{currentTime}}\",\n    \"activityDesc\": \"国庆节活动描述。。。\",\n    \"startTime\": \"2021-09-07 20:54:11\",\n    \"endTime\": \"2021-12-09 20:54:21\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8090/api/flash-activities/1?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"flash-activities",
+										"1"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "上线活动",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8090/api/flash-activities/1/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"flash-activities",
+										"1",
+										"online"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "下线活动",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8090/api/flash-activities/1/offline?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"flash-activities",
+										"1",
+										"offline"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取所有活动",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8090/api/flash-activities?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"flash-activities"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										},
+										{
+											"key": "pageSize",
+											"value": "10"
+										},
+										{
+											"key": "pageNumber",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "根据ID获取指定活动",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8090/api/flash-activities/1?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"flash-activities",
+										"1"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取已上线的活动",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8090/api/flash-activities/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"flash-activities",
+										"online"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										},
+										{
+											"key": "pageSize",
+											"value": "10"
+										},
+										{
+											"key": "pageNumber",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
 						}
 					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"activityName\": \"示例活动{{currentTime}}\",\n    \"activityDesc\": \"国庆节活动描述。。。\",\n    \"startTime\": \"2021-09-07 20:54:11\",\n    \"endTime\": \"2021-12-09 20:54:21\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8090/flash-activities?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"flash-activities"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								}
-							]
-						}
-					},
-					"response": []
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
 				},
 				{
-					"name": "编辑指定活动",
-					"event": [
+					"name": "秒杀品",
+					"item": [
 						{
-							"listen": "prerequest",
-							"script": {
-								"id": "d70f18a2-e39c-4213-b4fd-efcf1ad265ee",
-								"exec": [
-									"const moment = require('moment');",
-									"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+							"name": "获取指定活动的秒杀品",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8090/api/activities/1/flash-items?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										},
+										{
+											"key": "pageSize",
+											"value": "10"
+										},
+										{
+											"key": "pageNumber",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取指定活动的已上线秒杀品",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8090/api/activities/1/flash-items/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items",
+										"online"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										},
+										{
+											"key": "pageSize",
+											"value": "10"
+										},
+										{
+											"key": "pageNumber",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "根据ID获取秒杀品",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8090/api/activities/1/flash-items/3?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items",
+										"3"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "发布秒杀品",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "3c972dec-1ff1-4141-bb87-c38da848fbf8",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
 								],
-								"type": "text/javascript"
-							}
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"itemTitle\": \"秒杀品{{currentTime}}\",\n    \"itemSubTitle\": \"秒杀品测试\",\n    \"itemDesc\": \"秒杀品描述\",\n    \"itemPrice\": 1999,\n    \"initialStock\": 23,\n    \"availableStock\":23,\n    \"originalPrice\":120000,\n    \"flashPrice\":99900,\n    \"startTime\": \"2021-09-07 20:54:11\",\n    \"endTime\": \"2021-12-09 20:54:21\"\n}"
+								},
+								"url": {
+									"raw": "localhost:8090/api/activities/1/flash-items?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "上线秒杀品",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8090/api/activities/1/flash-items/9/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items",
+										"9",
+										"online"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "下线秒杀品",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8090/api/activities/1/flash-items/2/offline?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items",
+										"2",
+										"offline"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
 						}
 					],
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"activityName\": \"示例活动{{currentTime}}\",\n    \"activityDesc\": \"国庆节活动描述。。。\",\n    \"startTime\": \"2021-09-07 20:54:11\",\n    \"endTime\": \"2021-12-09 20:54:21\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8090/flash-activities/1?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"flash-activities",
-								"1"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								}
-							]
-						}
-					},
-					"response": []
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
 				},
 				{
-					"name": "上线活动",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8090/flash-activities/1/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"flash-activities",
-								"1",
-								"online"
-							],
-							"query": [
+					"name": "订单",
+					"item": [
+						{
+							"name": "下单",
+							"event": [
 								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+									"listen": "prerequest",
+									"script": {
+										"id": "fc1d2e63-04cb-4828-9fb6-ef69b2cfa22e",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
 								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "下线活动",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8090/flash-activities/1/offline?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
 							],
-							"port": "8090",
-							"path": [
-								"flash-activities",
-								"1",
-								"offline"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "获取所有活动",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8090/flash-activities?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"flash-activities"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"itemId\": 1,\n    \"activityId\": 1,\n    \"quantity\": 1,\n    \"totalAmount\": 200\n}"
 								},
-								{
-									"key": "pageSize",
-									"value": "10"
-								},
-								{
-									"key": "pageNumber",
-									"value": "1"
+								"url": {
+									"raw": "localhost:8090/api/flash-orders?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"flash-orders"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
 								}
-							]
+							},
+							"response": []
+						},
+						{
+							"name": "取消订单",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "01bfe2e5-d7ae-417e-a940-39ca112bf860",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "localhost:8090/api/flash-orders/1/cancel?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"flash-orders",
+										"1",
+										"cancel"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "我的订单",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "f5c06fa2-17fe-44e9-a2e8-4d124d1b958b",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "localhost:8090/api/flash-orders/my?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"flash-orders",
+										"my"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										},
+										{
+											"key": "pageSize",
+											"value": "10"
+										},
+										{
+											"key": "pageNumber",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取已提交订单的状态",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "b3eb6242-ba8d-4c46-b430-3d30294a8711",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "localhost:8090/api/items/14/flash-orders/1ad648571b920156266b9b6ba56229f6?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"items",
+										"14",
+										"flash-orders",
+										"1ad648571b920156266b9b6ba56229f6"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
 				},
 				{
-					"name": "根据ID获取指定活动",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
+					"name": "分桶库存",
+					"item": [
+						{
+							"name": "根据秒杀品获取分桶库存",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8090/api/items/2/buckets?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"items",
+										"2",
+										"buckets"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
 								}
-							}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "localhost:8090/flash-activities/1?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"flash-activities",
-								"1"
-							],
-							"query": [
+						{
+							"name": "编排分桶库存",
+							"event": [
 								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+									"listen": "prerequest",
+									"script": {
+										"id": "20dae165-287c-4b92-8bde-6bad163ed7a1",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
 								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "获取已上线的活动",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8090/flash-activities/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
-							"host": [
-								"localhost"
 							],
-							"port": "8090",
-							"path": [
-								"flash-activities",
-								"online"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"totalStocksAmount\": 23,\n    \"availableStocksAmount\":23,\n    \"arrangementMode\":1\n}"
 								},
-								{
-									"key": "pageSize",
-									"value": "10"
-								},
-								{
-									"key": "pageNumber",
-									"value": "1"
+								"url": {
+									"raw": "localhost:8090/api/items/1/buckets?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8090",
+									"path": [
+										"api",
+										"items",
+										"1",
+										"buckets"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
 								}
-							]
+							},
+							"response": []
 						}
-					},
-					"response": []
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
 				}
 			],
 			"protocolProfileBehavior": {}
 		},
 		{
-			"name": "秒杀品",
+			"name": "集群网关调试",
 			"item": [
 				{
-					"name": "获取指定活动的秒杀品",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "localhost:8090/activities/1/flash-items?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"activities",
-								"1",
-								"flash-items"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								},
-								{
-									"key": "pageSize",
-									"value": "10"
-								},
-								{
-									"key": "pageNumber",
-									"value": "1"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "获取指定活动的已上线秒杀品",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "localhost:8090/activities/1/flash-items/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"activities",
-								"1",
-								"flash-items",
-								"online"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								},
-								{
-									"key": "pageSize",
-									"value": "10"
-								},
-								{
-									"key": "pageNumber",
-									"value": "1"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "根据ID获取秒杀品",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "localhost:8090/activities/1/flash-items/3?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"activities",
-								"1",
-								"flash-items",
-								"3"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "发布秒杀品",
-					"event": [
+					"name": "活动",
+					"item": [
 						{
-							"listen": "prerequest",
-							"script": {
-								"id": "de250ea3-5b72-48c2-83d7-36b6c8ddeb07",
-								"exec": [
-									"const moment = require('moment');",
-									"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+							"name": "发布新的活动",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "9f46d863-726f-4385-993d-1a927736a68d",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
 								],
-								"type": "text/javascript"
-							}
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"activityName\": \"示例活动{{currentTime}}\",\n    \"activityDesc\": \"国庆节活动描述。。。\",\n    \"startTime\": \"2021-09-07 20:54:11\",\n    \"endTime\": \"2021-12-09 20:54:21\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8080/api/flash-activities?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"flash-activities"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "编辑指定活动",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "0571f411-38eb-4947-94a7-cde9e98af0f7",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"activityName\": \"示例活动{{currentTime}}\",\n    \"activityDesc\": \"国庆节活动描述。。。\",\n    \"startTime\": \"2021-09-07 20:54:11\",\n    \"endTime\": \"2021-12-09 20:54:21\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8080/api/flash-activities/1?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"flash-activities",
+										"1"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "上线活动",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8080/api/flash-activities/1/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"flash-activities",
+										"1",
+										"online"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "下线活动",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8080/api/flash-activities/1/offline?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"flash-activities",
+										"1",
+										"offline"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取所有活动",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8080/api/flash-activities?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"flash-activities"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										},
+										{
+											"key": "pageSize",
+											"value": "10"
+										},
+										{
+											"key": "pageNumber",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "根据ID获取指定活动",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8080/api/flash-activities/1?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"flash-activities",
+										"1"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取已上线的活动",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8080/api/flash-activities/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"flash-activities",
+										"online"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										},
+										{
+											"key": "pageSize",
+											"value": "10"
+										},
+										{
+											"key": "pageNumber",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
 						}
 					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"itemTitle\": \"秒杀品{{currentTime}}\",\n    \"itemSubTitle\": \"秒杀品测试\",\n    \"itemDesc\": \"秒杀品描述\",\n    \"itemPrice\": 1999,\n    \"initialStock\": 23,\n    \"availableStock\":23,\n    \"originalPrice\":120000,\n    \"flashPrice\":99900,\n    \"startTime\": \"2021-09-07 20:54:11\",\n    \"endTime\": \"2021-12-09 20:54:21\"\n}"
-						},
-						"url": {
-							"raw": "localhost:8090/activities/1/flash-items?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"activities",
-								"1",
-								"flash-items"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								}
-							]
-						}
-					},
-					"response": []
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
 				},
 				{
-					"name": "上线秒杀品",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8090/activities/1/flash-items/9/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"activities",
-								"1",
-								"flash-items",
-								"9",
-								"online"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "下线秒杀品",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "localhost:8090/activities/1/flash-items/2/offline?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"activities",
-								"1",
-								"flash-items",
-								"2",
-								"offline"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			],
-			"protocolProfileBehavior": {}
-		},
-		{
-			"name": "订单",
-			"item": [
-				{
-					"name": "下单",
-					"event": [
+					"name": "秒杀品",
+					"item": [
 						{
-							"listen": "prerequest",
-							"script": {
-								"id": "de250ea3-5b72-48c2-83d7-36b6c8ddeb07",
-								"exec": [
-									"const moment = require('moment');",
-									"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"itemId\": 1,\n    \"activityId\": 1,\n    \"quantity\": 1,\n    \"totalAmount\": 200\n}"
-						},
-						"url": {
-							"raw": "localhost:8090/flash-orders?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"flash-orders"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+							"name": "获取指定活动的秒杀品",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/api/activities/1/flash-items?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										},
+										{
+											"key": "pageSize",
+											"value": "10"
+										},
+										{
+											"key": "pageNumber",
+											"value": "1"
+										}
+									]
 								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "取消订单",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "de250ea3-5b72-48c2-83d7-36b6c8ddeb07",
-								"exec": [
-									"const moment = require('moment');",
-									"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "localhost:8090/flash-orders/1/cancel?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"flash-orders",
-								"1",
-								"cancel"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+						{
+							"name": "获取指定活动的已上线秒杀品",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/api/activities/1/flash-items/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items",
+										"online"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										},
+										{
+											"key": "pageSize",
+											"value": "10"
+										},
+										{
+											"key": "pageNumber",
+											"value": "1"
+										}
+									]
 								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "我的订单",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"id": "de250ea3-5b72-48c2-83d7-36b6c8ddeb07",
-								"exec": [
-									"const moment = require('moment');",
-									"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "localhost:8090/flash-orders/my?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"flash-orders",
-								"my"
-							],
-							"query": [
+						{
+							"name": "根据ID获取秒杀品",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/api/activities/1/flash-items/3?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items",
+										"3"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "发布秒杀品",
+							"event": [
 								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+									"listen": "prerequest",
+									"script": {
+										"id": "7bee4092-5248-49d6-814c-e1d9bdb5c5c5",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"itemTitle\": \"秒杀品{{currentTime}}\",\n    \"itemSubTitle\": \"秒杀品测试\",\n    \"itemDesc\": \"秒杀品描述\",\n    \"itemPrice\": 1999,\n    \"initialStock\": 23,\n    \"availableStock\":23,\n    \"originalPrice\":120000,\n    \"flashPrice\":99900,\n    \"startTime\": \"2021-09-07 20:54:11\",\n    \"endTime\": \"2021-12-09 20:54:21\"\n}"
 								},
-								{
-									"key": "pageSize",
-									"value": "10"
+								"url": {
+									"raw": "localhost:8080/api/activities/1/flash-items?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "上线秒杀品",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
 								},
-								{
-									"key": "pageNumber",
-									"value": "1"
+								"url": {
+									"raw": "localhost:8080/api/activities/1/flash-items/9/online?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items",
+										"9",
+										"online"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
 								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "获取已提交订单的状态",
-					"event": [
+							},
+							"response": []
+						},
 						{
-							"listen": "prerequest",
-							"script": {
-								"id": "de250ea3-5b72-48c2-83d7-36b6c8ddeb07",
-								"exec": [
-									"const moment = require('moment');",
-									"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+							"name": "下线秒杀品",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
 								],
-								"type": "text/javascript"
-							}
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:8080/api/activities/1/flash-items/2/offline?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"activities",
+										"1",
+										"flash-items",
+										"2",
+										"offline"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
 						}
 					],
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "localhost:8090/items/14/flash-orders/1ad648571b920156266b9b6ba56229f6?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"items",
-								"14",
-								"flash-orders",
-								"1ad648571b920156266b9b6ba56229f6"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			],
-			"protocolProfileBehavior": {}
-		},
-		{
-			"name": "分桶库存",
-			"item": [
-				{
-					"name": "根据秒杀品获取分桶库存",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "localhost:8090/items/2/buckets?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"items",
-								"2",
-								"buckets"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
-								}
-							]
-						}
-					},
-					"response": []
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
 				},
 				{
-					"name": "编排分桶库存",
-					"event": [
+					"name": "订单",
+					"item": [
 						{
-							"listen": "prerequest",
-							"script": {
-								"id": "de250ea3-5b72-48c2-83d7-36b6c8ddeb07",
-								"exec": [
-									"const moment = require('moment');",
-									"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+							"name": "下单",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "83b1600c-6c9c-4114-aae9-8528922993e2",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
 								],
-								"type": "text/javascript"
-							}
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"itemId\": 1,\n    \"activityId\": 1,\n    \"quantity\": 1,\n    \"totalAmount\": 200\n}"
+								},
+								"url": {
+									"raw": "localhost:8080/api/flash-orders?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"flash-orders"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "取消订单",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "046ba51c-a8e0-40b8-b33a-e59f292ed83f",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "localhost:8080/api/flash-orders/1/cancel?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"flash-orders",
+										"1",
+										"cancel"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "我的订单",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "731d00c0-5b8b-4c98-9521-186834a08b2f",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "localhost:8080/api/flash-orders/my?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=&pageSize=10&pageNumber=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"flash-orders",
+										"my"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										},
+										{
+											"key": "pageSize",
+											"value": "10"
+										},
+										{
+											"key": "pageNumber",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "获取已提交订单的状态",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "243ae532-85af-4c00-a493-e75e878f7b79",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "localhost:8080/api/items/14/flash-orders/1ad648571b920156266b9b6ba56229f6?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"items",
+										"14",
+										"flash-orders",
+										"1ad648571b920156266b9b6ba56229f6"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
 						}
 					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"totalStocksAmount\": 23,\n    \"availableStocksAmount\":23,\n    \"arrangementMode\":1\n}"
-						},
-						"url": {
-							"raw": "localhost:8090/items/1/buckets?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
-							"host": [
-								"localhost"
-							],
-							"port": "8090",
-							"path": [
-								"items",
-								"1",
-								"buckets"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "分桶库存",
+					"item": [
+						{
+							"name": "根据秒杀品获取分桶库存",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/api/items/2/buckets?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"items",
+										"2",
+										"buckets"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
 								}
-							]
+							},
+							"response": []
+						},
+						{
+							"name": "编排分桶库存",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "e012e6d6-df4a-422f-aeca-74ce6be3d867",
+										"exec": [
+											"const moment = require('moment');",
+											"pm.globals.set(\"currentTime\", moment().format(\"MMDDHHmmss\"));"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"totalStocksAmount\": 23,\n    \"availableStocksAmount\":23,\n    \"arrangementMode\":1\n}"
+								},
+								"url": {
+									"raw": "localhost:8080/api/items/1/buckets?token=eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0=",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"items",
+										"1",
+										"buckets"
+									],
+									"query": [
+										{
+											"key": "token",
+											"value": "eyJleHBpcmVEYXRlIjoiMjAyMS0xMi0wNCAxNzo1Nzo1NCIsInVzZXJJZCI6MTAwMX0="
+										}
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
 				}
 			],
 			"protocolProfileBehavior": {}
