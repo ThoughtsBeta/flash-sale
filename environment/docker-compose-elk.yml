@@ -79,10 +79,7 @@ services:
     image: elasticsearch:7.14.2
     container_name: elasticsearch
     volumes:
-    - type: bind
-      source: ./config/elk/elasticsearch.yml
-      target: /usr/share/elasticsearch/config/elasticsearch.yml
-      read_only: true
+    - ./config/elk/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
     - "9200:9200"
     - "9300:9300"
@@ -96,14 +93,8 @@ services:
     image: logstash:7.14.2
     container_name: logstash
     volumes:
-    - type: bind
-      source: ./config/elk/logstash.yml
-      target: /usr/share/logstash/config/logstash.yml
-      read_only: true
-    - type: bind
-      source: ./config/elk/pipeline
-      target: /usr/share/logstash/pipeline
-      read_only: true
+    - ./config/elk/logstash.yml:/usr/share/logstash/config/logstash.yml
+    - ./config/elk/pipeline:/usr/share/logstash/pipeline
     ports:
     - "5044:5044"
     - "5000:5000/tcp"
@@ -120,10 +111,7 @@ services:
     image: kibana:7.14.2
     container_name: kibana
     volumes:
-    - type: bind
-      source: ./config/elk/kibana.yml
-      target: /usr/share/kibana/config/kibana.yml
-      read_only: true
+    - ./config/elk/kibana.yml:/usr/share/kibana/config/kibana.yml
     ports:
     - "5601:5601"
     networks:
