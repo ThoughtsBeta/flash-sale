@@ -46,7 +46,7 @@
 * 容器化：Docker
 * 容器化管理：Swarm、Portainer
 * 可观性与可视化监控：Prometheus、Grafana
-* 限流：Sentinel
+* 限流、降级与熔断：Sentinel
 * 动态配置：Nacos
 * 日志治理：Elasticsearch、Logstash、Kibana
 * 测试工具：Postman和Jmeter
