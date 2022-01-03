@@ -21,7 +21,7 @@ public class ResourcePathRuleChainService extends SecurityRuleChainServiceBase i
 
     @Override
     public boolean run(HttpServletRequest request, HttpServletResponse response) {
-        Rule rule = securityRulesConfiguration.getPathRule(request.getServletPath());
+        Rule rule = securityRulesConfigurationComponent.getPathRule(request.getServletPath());
         if (!rule.isEnable()) {
             return true;
         }

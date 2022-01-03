@@ -15,7 +15,7 @@ public class AccountRuleChainService extends SecurityRuleChainServiceBase implem
 
     @Override
     public boolean run(HttpServletRequest request, HttpServletResponse response) {
-        Rule rule = securityRulesConfiguration.getAccountRule();
+        Rule rule = securityRulesConfigurationComponent.getAccountRule();
         if (!rule.isEnable()) {
             return true;
         }
