@@ -21,7 +21,7 @@ public class IPRuleChainService extends SecurityRuleChainServiceBase  implements
 
     @Override
     public boolean run(HttpServletRequest request, HttpServletResponse response) {
-        Rule rule = securityRulesConfiguration.getPathRule(request.getServletPath());
+        Rule rule = securityRulesConfigurationComponent.getIpRule();
         if (!rule.isEnable()) {
             return true;
         }
