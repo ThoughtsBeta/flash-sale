@@ -66,8 +66,12 @@ public class FlashItemsCacheService {
         }
         boolean isLockSuccess = localCacleUpdatelock.tryLock();
         if(isLockSuccess) {
-            flashItemsLocalCache.put(activityId, distributedCachedFlashItem);
-            localCacleUpdatelock.unlock();
+            try {
+                flashItemsLocalCache.put(activityId, distributedCachedFlashItem);
+            }
+            finally {
+                localCacleUpdatelock.unlock();
+            }
         }
         return distributedCachedFlashItem;
     }

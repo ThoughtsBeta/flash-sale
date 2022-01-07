@@ -69,8 +69,12 @@ public class FlashActivitiesCacheService {
         }
         boolean isLockSuccess = localCacleUpdatelock.tryLock();
         if(isLockSuccess) {
-            flashActivitiesLocalCache.put(pageNumber, distributedCachedFlashActivity);
-            localCacleUpdatelock.unlock();
+            try {
+                flashActivitiesLocalCache.put(pageNumber, distributedCachedFlashActivity);
+            }
+            finally {
+                localCacleUpdatelock.unlock();
+            }
         }
         return distributedCachedFlashActivity;
     }
