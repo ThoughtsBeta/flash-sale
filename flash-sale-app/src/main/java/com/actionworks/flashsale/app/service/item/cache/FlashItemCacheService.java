@@ -59,6 +59,7 @@ public class FlashItemCacheService {
         if (distributedCachedFlashItem == null) {
             return tryToUpdateItemCacheByLock(itemId);
         }
+        flashItemLocalCache.put(itemId, distributedCachedFlashItem);
         return distributedCachedFlashItem;
     }
 

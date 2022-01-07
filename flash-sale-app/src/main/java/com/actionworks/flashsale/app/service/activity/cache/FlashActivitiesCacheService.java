@@ -64,6 +64,7 @@ public class FlashActivitiesCacheService {
         if (distributedCachedFlashActivity == null) {
             return tryToUpdateActivitiesCacheByLock(pageNumber);
         }
+        flashActivitiesLocalCache.put(pageNumber, distributedCachedFlashActivity);
         return distributedCachedFlashActivity;
     }
 
