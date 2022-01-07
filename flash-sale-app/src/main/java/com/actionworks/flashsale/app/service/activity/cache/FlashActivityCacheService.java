@@ -60,6 +60,7 @@ public class FlashActivityCacheService {
         if (distributedCachedFlashActivity == null) {
             return tryToUpdateActivityCacheByLock(activityId);
         }
+        flashActivityLocalCache.put(activityId, distributedCachedFlashActivity);
         return distributedCachedFlashActivity;
     }
 
