@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.actionworks.flashsale.app.model.constants.CacheConstants.ACTIVITY_CACHE_KEY;
 import static com.actionworks.flashsale.app.model.constants.CacheConstants.FIVE_MINUTES;
@@ -25,6 +27,7 @@ public class FlashActivityCacheService {
     private final static Logger logger = LoggerFactory.getLogger(FlashActivityCacheService.class);
     private final static Cache<Long, FlashActivityCache> flashActivityLocalCache = CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(5).expireAfterWrite(10, TimeUnit.SECONDS).build();
     private static final String UPDATE_ACTIVITY_CACHE_LOCK_KEY = "UPDATE_ACTIVITY_CACHE_LOCK_KEY_";
+    private final Lock localCacleUpdatelock = new ReentrantLock();
 
     @Resource
     private DistributedCacheService distributedCacheService;
@@ -60,7 +63,11 @@ public class FlashActivityCacheService {
         if (distributedCachedFlashActivity == null) {
             return tryToUpdateActivityCacheByLock(activityId);
         }
-        flashActivityLocalCache.put(activityId, distributedCachedFlashActivity);
+        boolean isLockSuccess = localCacleUpdatelock.tryLock();
+        if(isLockSuccess) {
+            flashActivityLocalCache.put(activityId, distributedCachedFlashActivity);
+            localCacleUpdatelock.unlock();
+        }
         return distributedCachedFlashActivity;
     }
 
