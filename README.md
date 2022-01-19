@@ -98,7 +98,7 @@
 
 在启用应用前，请务必确保已成功执行第一步，并且各中间件容器启动成功。
 
-1. 下载源码后执行`./mvnw clean install`完成系统依赖包的安装（更快构建可以考虑使用[mvnd](https://github.com/apache/maven-mvnd)）；
+1. 下载源码后执行`./mvnw clean install`完成系统依赖包的安装（更快应用构建可以考虑使用[mvnd](https://github.com/apache/maven-mvnd)）；
 2. 选择`start`模块中的`com.actionworks.flashsale.FlashSaleApplication`作为程序入口运行。
 >**特别提醒**
 >本地启动时请在IDE中指定properties为`local`.
