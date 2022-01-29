@@ -63,16 +63,18 @@ public class FlashActivityCacheService {
         if (distributedFlashActivityCache == null) {
             distributedFlashActivityCache = tryToUpdateActivityCacheByLock(activityId);
         }
-        boolean isLockSuccess = localCacleUpdatelock.tryLock();
-        if(isLockSuccess) {
-            try {
-                flashActivityLocalCache.put(activityId, distributedCachedFlashActivity);
-            }
-            finally {
-                localCacleUpdatelock.unlock();
+        if (distributedFlashActivityCache != null && !distributedFlashActivityCache.isLater()) {
+            boolean isLockSuccess = localCacleUpdatelock.tryLock();
+            if (isLockSuccess) {
+                try {
+                    flashActivityLocalCache.put(activityId, distributedFlashActivityCache);
+                    logger.info("activityCache|本地缓存已更新|{}", activityId);
+                } finally {
+                    localCacleUpdatelock.unlock();
+                }
             }
         }
-        return distributedCachedFlashActivity;
+        return distributedFlashActivityCache;
     }
 
     public FlashActivityCache tryToUpdateActivityCacheByLock(Long activityId) {

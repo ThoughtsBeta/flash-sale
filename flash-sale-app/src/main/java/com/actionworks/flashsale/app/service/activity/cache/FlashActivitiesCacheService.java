@@ -67,16 +67,18 @@ public class FlashActivitiesCacheService {
         if (distributedFlashActivityCache == null) {
             distributedFlashActivityCache = tryToUpdateActivitiesCacheByLock(pageNumber);
         }
-        boolean isLockSuccess = localCacleUpdatelock.tryLock();
-        if(isLockSuccess) {
-            try {
-                flashActivitiesLocalCache.put(pageNumber, distributedCachedFlashActivity);
-            }
-            finally {
-                localCacleUpdatelock.unlock();
+        if (distributedFlashActivityCache != null && !distributedFlashActivityCache.isLater()) {
+            boolean isLockSuccess = localCacleUpdatelock.tryLock();
+            if (isLockSuccess) {
+                try {
+                    flashActivitiesLocalCache.put(pageNumber, distributedFlashActivityCache);
+                    logger.info("activitiesCache|本地缓存已更新|{}", pageNumber);
+                } finally {
+                    localCacleUpdatelock.unlock();
+                }
             }
         }
-        return distributedCachedFlashActivity;
+        return distributedFlashActivityCache;
     }
 
     public FlashActivitiesCache tryToUpdateActivitiesCacheByLock(Integer pageNumber) {
