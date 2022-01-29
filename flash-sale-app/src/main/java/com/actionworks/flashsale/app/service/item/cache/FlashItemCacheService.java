@@ -58,20 +58,22 @@ public class FlashItemCacheService {
 
     private FlashItemCache getLatestDistributedCache(Long itemId) {
         logger.info("itemCache|读取远程缓存|{}", itemId);
-        FlashItemCache distributedCachedFlashItem = distributedCacheService.getObject(buildItemCacheKey(itemId), FlashItemCache.class);
-        if (distributedCachedFlashItem == null) {
-            return tryToUpdateItemCacheByLock(itemId);
+        FlashItemCache distributedFlashItemCache = distributedCacheService.getObject(buildItemCacheKey(itemId), FlashItemCache.class);
+        if (distributedFlashItemCache == null) {
+            distributedFlashItemCache = tryToUpdateItemCacheByLock(itemId);
         }
-        boolean isLockSuccess = localCacleUpdatelock.tryLock();
-        if(isLockSuccess) {
-            try {
-                flashItemLocalCache.put(itemId, distributedCachedFlashItem);
-            }
-            finally {
-                localCacleUpdatelock.unlock();
+        if (distributedFlashItemCache != null && !distributedFlashItemCache.isLater()) {
+            boolean isLockSuccess = localCacleUpdatelock.tryLock();
+            if (isLockSuccess) {
+                try {
+                    flashItemLocalCache.put(itemId, distributedFlashItemCache);
+                    logger.info("itemCache|本地缓存已更新|{}", itemId);
+                } finally {
+                    localCacleUpdatelock.unlock();
+                }
             }
         }
-        return distributedCachedFlashItem;
+        return distributedFlashItemCache;
     }
 
     public FlashItemCache tryToUpdateItemCacheByLock(Long itemId) {
@@ -83,15 +85,14 @@ public class FlashItemCacheService {
                 return new FlashItemCache().tryLater();
             }
             FlashItem flashItem = flashItemDomainService.getFlashItem(itemId);
+            FlashItemCache flashItemCache;
             if (flashItem == null) {
-                return new FlashItemCache().notExist();
+                flashItemCache = new FlashItemCache().notExist();
+            } else {
+                flashItemCache = new FlashItemCache().with(flashItem).withVersion(System.currentTimeMillis());
             }
-            FlashItemCache flashItemCache = new FlashItemCache().with(flashItem).withVersion(System.currentTimeMillis());
             distributedCacheService.put(buildItemCacheKey(itemId), JSON.toJSONString(flashItemCache), FIVE_MINUTES);
             logger.info("itemCache|远程缓存已更新|{}", itemId);
-
-            flashItemLocalCache.put(itemId, flashItemCache);
-            logger.info("itemCache|本地缓存已更新|{}", itemId);
             return flashItemCache;
         } catch (InterruptedException e) {
             logger.error("itemCache|远程缓存更新失败|{}", itemId);

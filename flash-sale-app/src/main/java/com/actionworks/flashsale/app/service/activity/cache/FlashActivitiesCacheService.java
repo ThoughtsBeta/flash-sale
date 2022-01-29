@@ -63,20 +63,22 @@ public class FlashActivitiesCacheService {
 
     private FlashActivitiesCache getLatestDistributedCache(Integer pageNumber) {
         logger.info("activitiesCache|读取远程缓存|{}", pageNumber);
-        FlashActivitiesCache distributedCachedFlashActivity = distributedCacheService.getObject(buildActivityCacheKey(pageNumber), FlashActivitiesCache.class);
-        if (distributedCachedFlashActivity == null) {
-            return tryToUpdateActivitiesCacheByLock(pageNumber);
+        FlashActivitiesCache distributedFlashActivityCache = distributedCacheService.getObject(buildActivityCacheKey(pageNumber), FlashActivitiesCache.class);
+        if (distributedFlashActivityCache == null) {
+            distributedFlashActivityCache = tryToUpdateActivitiesCacheByLock(pageNumber);
         }
-        boolean isLockSuccess = localCacleUpdatelock.tryLock();
-        if(isLockSuccess) {
-            try {
-                flashActivitiesLocalCache.put(pageNumber, distributedCachedFlashActivity);
-            }
-            finally {
-                localCacleUpdatelock.unlock();
+        if (distributedFlashActivityCache != null && !distributedFlashActivityCache.isLater()) {
+            boolean isLockSuccess = localCacleUpdatelock.tryLock();
+            if (isLockSuccess) {
+                try {
+                    flashActivitiesLocalCache.put(pageNumber, distributedFlashActivityCache);
+                    logger.info("activitiesCache|本地缓存已更新|{}", pageNumber);
+                } finally {
+                    localCacleUpdatelock.unlock();
+                }
             }
         }
-        return distributedCachedFlashActivity;
+        return distributedFlashActivityCache;
     }
 
     public FlashActivitiesCache tryToUpdateActivitiesCacheByLock(Integer pageNumber) {
@@ -89,19 +91,18 @@ public class FlashActivitiesCacheService {
             }
             PagesQueryCondition pagesQueryCondition = new PagesQueryCondition();
             PageResult<FlashActivity> flashActivityPageResult = flashActivityDomainService.getFlashActivities(pagesQueryCondition);
+            FlashActivitiesCache flashActivitiesCache;
             if (flashActivityPageResult == null) {
-                return new FlashActivitiesCache().notExist();
+                flashActivitiesCache = new FlashActivitiesCache().notExist();
+            } else {
+                flashActivitiesCache = new FlashActivitiesCache()
+                        .setTotal(flashActivityPageResult.getTotal())
+                        .setFlashActivities(flashActivityPageResult.getData())
+                        .setVersion(System.currentTimeMillis());
             }
-            FlashActivitiesCache flashActivityCache = new FlashActivitiesCache()
-                    .setTotal(flashActivityPageResult.getTotal())
-                    .setFlashActivities(flashActivityPageResult.getData())
-                    .setVersion(System.currentTimeMillis());
-            distributedCacheService.put(buildActivityCacheKey(pageNumber), JSON.toJSONString(flashActivityCache), FIVE_MINUTES);
+            distributedCacheService.put(buildActivityCacheKey(pageNumber), JSON.toJSONString(flashActivitiesCache), FIVE_MINUTES);
             logger.info("activitiesCache|远程缓存已更新|{}", pageNumber);
-
-            flashActivitiesLocalCache.put(pageNumber, flashActivityCache);
-            logger.info("activitiesCache|本地缓存已更新|{}", pageNumber);
-            return flashActivityCache;
+            return flashActivitiesCache;
         } catch (InterruptedException e) {
             logger.error("activitiesCache|远程缓存更新失败", e);
             return new FlashActivitiesCache().tryLater();

@@ -62,17 +62,20 @@ public class FlashItemsCacheService {
         logger.info("itemsCache|读取远程缓存|{}", activityId);
         FlashItemsCache distributedCachedFlashItem = distributedCacheService.getObject(buildItemCacheKey(activityId), FlashItemsCache.class);
         if (distributedCachedFlashItem == null) {
-            return tryToUpdateItemsCacheByLock(activityId);
+            distributedCachedFlashItem = tryToUpdateItemsCacheByLock(activityId);
         }
-        boolean isLockSuccess = localCacleUpdatelock.tryLock();
-        if(isLockSuccess) {
-            try {
-                flashItemsLocalCache.put(activityId, distributedCachedFlashItem);
-            }
-            finally {
-                localCacleUpdatelock.unlock();
+        if (distributedCachedFlashItem != null && !distributedCachedFlashItem.isLater()) {
+            boolean isLockSuccess = localCacleUpdatelock.tryLock();
+            if (isLockSuccess) {
+                try {
+                    flashItemsLocalCache.put(activityId, distributedCachedFlashItem);
+                    logger.info("itemsCache|本地缓存已更新|{}", activityId);
+                } finally {
+                    localCacleUpdatelock.unlock();
+                }
             }
         }
+
         return distributedCachedFlashItem;
     }
 
@@ -88,19 +91,18 @@ public class FlashItemsCacheService {
             pagesQueryCondition.setActivityId(activityId);
             pagesQueryCondition.setStatus(FlashItemStatus.ONLINE.getCode());
             PageResult<FlashItem> flashItemPageResult = flashItemDomainService.getFlashItems(pagesQueryCondition);
+            FlashItemsCache flashItemsCache;
             if (flashItemPageResult == null) {
-                return new FlashItemsCache().notExist();
+                flashItemsCache = new FlashItemsCache().notExist();
+            } else {
+                flashItemsCache = new FlashItemsCache()
+                        .setTotal(flashItemPageResult.getTotal())
+                        .setFlashItems(flashItemPageResult.getData())
+                        .setVersion(System.currentTimeMillis());
             }
-            FlashItemsCache flashItemCache = new FlashItemsCache()
-                    .setTotal(flashItemPageResult.getTotal())
-                    .setFlashItems(flashItemPageResult.getData())
-                    .setVersion(System.currentTimeMillis());
-            distributedCacheService.put(buildItemCacheKey(activityId), JSON.toJSONString(flashItemCache), FIVE_MINUTES);
+            distributedCacheService.put(buildItemCacheKey(activityId), JSON.toJSONString(flashItemsCache), FIVE_MINUTES);
             logger.info("itemsCache|远程缓存已更新|{}", activityId);
-
-            flashItemsLocalCache.put(activityId, flashItemCache);
-            logger.info("itemsCache|本地缓存已更新|{}", activityId);
-            return flashItemCache;
+            return flashItemsCache;
         } catch (Exception e) {
             logger.error("itemsCache|远程缓存更新失败|{}", activityId);
             return new FlashItemsCache().tryLater();

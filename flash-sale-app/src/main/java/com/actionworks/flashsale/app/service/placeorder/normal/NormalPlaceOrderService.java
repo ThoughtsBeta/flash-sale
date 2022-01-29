@@ -2,7 +2,10 @@ package com.actionworks.flashsale.app.service.placeorder.normal;
 
 import com.actionworks.flashsale.app.exception.BizException;
 import com.actionworks.flashsale.app.model.command.FlashPlaceOrderCommand;
+import com.actionworks.flashsale.app.model.dto.FlashItemDTO;
+import com.actionworks.flashsale.app.model.result.AppSimpleResult;
 import com.actionworks.flashsale.app.model.result.PlaceOrderResult;
+import com.actionworks.flashsale.app.service.activity.FlashActivityAppService;
 import com.actionworks.flashsale.app.service.item.FlashItemAppService;
 import com.actionworks.flashsale.app.service.placeorder.PlaceOrderService;
 import com.actionworks.flashsale.app.service.stock.ItemStockCacheService;
@@ -10,10 +13,7 @@ import com.actionworks.flashsale.app.util.MultiPlaceOrderTypesCondition;
 import com.actionworks.flashsale.app.util.OrderNoGenerateContext;
 import com.actionworks.flashsale.app.util.OrderNoGenerateService;
 import com.actionworks.flashsale.domain.model.StockDeduction;
-import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.model.entity.FlashOrder;
-import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
-import com.actionworks.flashsale.domain.service.FlashItemDomainService;
 import com.actionworks.flashsale.domain.service.FlashOrderDomainService;
 import com.actionworks.flashsale.domain.service.StockDeductionDomainService;
 import com.alibaba.fastjson.JSON;
@@ -26,6 +26,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import static com.actionworks.flashsale.app.exception.AppErrorCode.INVALID_PARAMS;
+import static com.actionworks.flashsale.app.exception.AppErrorCode.ITEM_NOT_FOUND;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.PLACE_ORDER_FAILED;
 import static com.actionworks.flashsale.app.model.builder.FlashOrderAppBuilder.toDomain;
 
@@ -36,11 +37,9 @@ public class NormalPlaceOrderService implements PlaceOrderService {
     @Resource
     private FlashOrderDomainService flashOrderDomainService;
     @Resource
-    private FlashItemDomainService flashItemDomainService;
-    @Resource
     private StockDeductionDomainService stockDeductionDomainService;
     @Resource
-    private FlashActivityDomainService flashActivityDomainService;
+    private FlashActivityAppService flashActivityAppService;
     @Resource
     private ItemStockCacheService itemStockCacheService;
     @Resource
@@ -59,7 +58,7 @@ public class NormalPlaceOrderService implements PlaceOrderService {
         if (userId == null || placeOrderCommand == null || !placeOrderCommand.validateParams()) {
             throw new BizException(INVALID_PARAMS);
         }
-        boolean isActivityAllowPlaceOrder = flashActivityDomainService.isAllowPlaceOrderOrNot(placeOrderCommand.getActivityId());
+        boolean isActivityAllowPlaceOrder = flashActivityAppService.isAllowPlaceOrderOrNot(placeOrderCommand.getActivityId());
         if (!isActivityAllowPlaceOrder) {
             logger.info("placeOrder|秒杀活动下单规则校验未通过|{},{}", userId, placeOrderCommand.getActivityId());
             return PlaceOrderResult.failed(PLACE_ORDER_FAILED);
@@ -69,8 +68,12 @@ public class NormalPlaceOrderService implements PlaceOrderService {
             logger.info("placeOrder|秒杀品下单规则校验未通过|{},{}", userId, placeOrderCommand.getActivityId());
             return PlaceOrderResult.failed(PLACE_ORDER_FAILED);
         }
-        FlashItem flashItem = flashItemDomainService.getFlashItem(placeOrderCommand.getItemId());
+        AppSimpleResult<FlashItemDTO> flashItemResult = flashItemAppService.getFlashItem(placeOrderCommand.getItemId());
 
+        if (!flashItemResult.isSuccess() || flashItemResult.getData() == null) {
+            return PlaceOrderResult.failed(ITEM_NOT_FOUND);
+        }
+        FlashItemDTO flashItem = flashItemResult.getData();
         Long orderId = orderNoGenerateService.generateOrderNo(new OrderNoGenerateContext());
         FlashOrder flashOrderToPlace = toDomain(placeOrderCommand);
         flashOrderToPlace.setItemTitle(flashItem.getItemTitle());

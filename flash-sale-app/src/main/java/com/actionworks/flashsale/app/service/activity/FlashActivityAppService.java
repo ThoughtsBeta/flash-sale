@@ -19,4 +19,6 @@ public interface FlashActivityAppService {
     AppResult onlineFlashActivity(Long userId, Long activityId);
 
     AppResult offlineFlashActivity(Long userId, Long activityId);
+
+    boolean isAllowPlaceOrderOrNot(Long activityId);
 }

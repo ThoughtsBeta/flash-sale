@@ -171,35 +171,26 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
 
     @Override
     public boolean isAllowPlaceOrderOrNot(Long itemId) {
-        try {
-            FlashItemCache flashItemCache = null;
-            for (int i = 0; i < 3; i++) {
-                flashItemCache = flashItemCacheService.getCachedItem(itemId, null);
-                if (!flashItemCache.isExist()) {
-                    return false;
-                }
-                if (flashItemCache.isLater()) {
-                    Thread.sleep(20);
-                }
-                if (flashItemCache.getFlashItem() != null) {
-                    break;
-                }
-            }
-            if (flashItemCache.getFlashItem() != null) {
-                if (!flashItemCache.getFlashItem().isOnline()) {
-                    logger.info("isAllowPlaceOrderOrNot|秒杀品尚未上线|{}", itemId);
-                    return false;
-                }
-                if (!flashItemCache.getFlashItem().isInProgress()) {
-                    logger.info("isAllowPlaceOrderOrNot|当前非秒杀时段|{}", itemId);
-                    return false;
-                }
-                return true;
-            }
-        } catch (InterruptedException e) {
+        FlashItemCache flashItemCache = flashItemCacheService.getCachedItem(itemId, null);
+        if (!flashItemCache.isLater()) {
+            logger.info("isAllowPlaceOrderOrNot|稍后再试|{}", itemId);
             return false;
         }
-        return false;
+        if (!flashItemCache.isExist() || flashItemCache.getFlashItem() == null) {
+            logger.info("isAllowPlaceOrderOrNot|秒杀品不存在|{}", itemId);
+            return false;
+        }
+        if (!flashItemCache.getFlashItem().isOnline()) {
+            logger.info("isAllowPlaceOrderOrNot|秒杀品尚未上线|{}", itemId);
+            return false;
+        }
+        if (!flashItemCache.getFlashItem().isInProgress()) {
+            logger.info("isAllowPlaceOrderOrNot|当前非秒杀时段|{}", itemId);
+            return false;
+        }
+        // 可在此处丰富其他校验规则
+
+        return true;
     }
 
     private void updateLatestItemStock(Long userId, FlashItem flashItem) {
