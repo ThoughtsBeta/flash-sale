@@ -148,4 +148,28 @@ public class DefaultActivityAppService implements FlashActivityAppService {
         flashActivityDTO.setVersion(flashActivityCache.getVersion());
         return AppSimpleResult.ok(flashActivityDTO);
     }
+
+    @Override
+    public boolean isAllowPlaceOrderOrNot(Long activityId) {
+        FlashActivityCache flashActivityCache = flashActivityCacheService.getCachedActivity(activityId, null);
+        if (!flashActivityCache.isLater()) {
+            logger.info("isAllowPlaceOrderOrNot|稍后再试|{}", activityId);
+            return false;
+        }
+        if (!flashActivityCache.isExist() || flashActivityCache.getFlashActivity() == null) {
+            logger.info("isAllowPlaceOrderOrNot|活动不存在|{}", activityId);
+            return false;
+        }
+        FlashActivity flashActivity = flashActivityCache.getFlashActivity();
+        if (!flashActivity.isOnline()) {
+            logger.info("isAllowPlaceOrderOrNot|活动尚未上线|{}", activityId);
+            return false;
+        }
+        if (!flashActivity.isInProgress()) {
+            logger.info("isAllowPlaceOrderOrNot|活动非秒杀时段|{}", activityId);
+            return false;
+        }
+        // 可在此处丰富其他校验规则
+        return true;
+    }
 }

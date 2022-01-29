@@ -59,9 +59,9 @@ public class FlashActivityCacheService {
 
     private FlashActivityCache getLatestDistributedCache(Long activityId) {
         logger.info("activityCache|读取远程缓存|{}", activityId);
-        FlashActivityCache distributedCachedFlashActivity = distributedCacheService.getObject(buildActivityCacheKey(activityId), FlashActivityCache.class);
-        if (distributedCachedFlashActivity == null) {
-            return tryToUpdateActivityCacheByLock(activityId);
+        FlashActivityCache distributedFlashActivityCache = distributedCacheService.getObject(buildActivityCacheKey(activityId), FlashActivityCache.class);
+        if (distributedFlashActivityCache == null) {
+            distributedFlashActivityCache = tryToUpdateActivityCacheByLock(activityId);
         }
         boolean isLockSuccess = localCacleUpdatelock.tryLock();
         if(isLockSuccess) {
@@ -84,15 +84,14 @@ public class FlashActivityCacheService {
                 return new FlashActivityCache().tryLater();
             }
             FlashActivity flashActivity = flashActivityDomainService.getFlashActivity(activityId);
+            FlashActivityCache flashActivityCache;
             if (flashActivity == null) {
-                return new FlashActivityCache().notExist();
+                flashActivityCache = new FlashActivityCache().notExist();
+            } else {
+                flashActivityCache = new FlashActivityCache().with(flashActivity).withVersion(System.currentTimeMillis());
             }
-            FlashActivityCache flashActivityCache = new FlashActivityCache().with(flashActivity).withVersion(System.currentTimeMillis());
             distributedCacheService.put(buildActivityCacheKey(activityId), JSON.toJSONString(flashActivityCache), FIVE_MINUTES);
             logger.info("activityCache|远程缓存已更新|{}", activityId);
-
-            flashActivityLocalCache.put(activityId, flashActivityCache);
-            logger.info("activityCache|本地缓存已更新|{}", activityId);
             return flashActivityCache;
         } catch (InterruptedException e) {
             logger.error("activityCache|远程缓存更新失败|{}", activityId);

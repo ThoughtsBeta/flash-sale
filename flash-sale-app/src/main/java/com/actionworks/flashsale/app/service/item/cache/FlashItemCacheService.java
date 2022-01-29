@@ -83,15 +83,14 @@ public class FlashItemCacheService {
                 return new FlashItemCache().tryLater();
             }
             FlashItem flashItem = flashItemDomainService.getFlashItem(itemId);
+            FlashItemCache flashItemCache;
             if (flashItem == null) {
-                return new FlashItemCache().notExist();
+                flashItemCache = new FlashItemCache().notExist();
+            } else {
+                flashItemCache = new FlashItemCache().with(flashItem).withVersion(System.currentTimeMillis());
             }
-            FlashItemCache flashItemCache = new FlashItemCache().with(flashItem).withVersion(System.currentTimeMillis());
             distributedCacheService.put(buildItemCacheKey(itemId), JSON.toJSONString(flashItemCache), FIVE_MINUTES);
             logger.info("itemCache|远程缓存已更新|{}", itemId);
-
-            flashItemLocalCache.put(itemId, flashItemCache);
-            logger.info("itemCache|本地缓存已更新|{}", itemId);
             return flashItemCache;
         } catch (InterruptedException e) {
             logger.error("itemCache|远程缓存更新失败|{}", itemId);

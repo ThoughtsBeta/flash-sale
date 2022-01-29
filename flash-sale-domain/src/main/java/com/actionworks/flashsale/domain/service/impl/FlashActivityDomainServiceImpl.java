@@ -138,23 +138,4 @@ public class FlashActivityDomainServiceImpl implements FlashActivityDomainServic
         Optional<FlashActivity> flashActivityOptional = flashActivityRepository.findById(activityId);
         return flashActivityOptional.orElse(null);
     }
-
-    @Override
-    public boolean isAllowPlaceOrderOrNot(Long activityId) {
-        Optional<FlashActivity> flashActivityOptional = flashActivityRepository.findById(activityId);
-        if (!flashActivityOptional.isPresent()) {
-            logger.info("isAllowPlaceOrderOrNot|活动不存在|{}", activityId);
-            return false;
-        }
-        FlashActivity flashActivity = flashActivityOptional.get();
-        if (!flashActivity.isOnline()) {
-            logger.info("isAllowPlaceOrderOrNot|活动尚未上线|{}", activityId);
-            return false;
-        }
-        if (!flashActivity.isInProgress()) {
-            logger.info("isAllowPlaceOrderOrNot|活动非秒杀时段|{}", activityId);
-            return false;
-        }
-        return true;
-    }
 }
