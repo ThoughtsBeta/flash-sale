@@ -1,7 +1,6 @@
 package com.actionworks.flashsale.app.service.placeorder.queued;
 
-import com.actionworks.flashsale.app.service.item.FlashItemAppService;
-import com.actionworks.flashsale.app.service.placeorder.PlaceOrderService;
+import com.actionworks.flashsale.app.exception.BizException;
 import com.actionworks.flashsale.app.model.PlaceOrderTask;
 import com.actionworks.flashsale.app.model.builder.PlaceOrderTaskBuilder;
 import com.actionworks.flashsale.app.model.command.FlashPlaceOrderCommand;
