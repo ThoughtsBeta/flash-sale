@@ -152,7 +152,7 @@ public class DefaultActivityAppService implements FlashActivityAppService {
     @Override
     public boolean isAllowPlaceOrderOrNot(Long activityId) {
         FlashActivityCache flashActivityCache = flashActivityCacheService.getCachedActivity(activityId, null);
-        if (!flashActivityCache.isLater()) {
+        if (flashActivityCache.isLater()) {
             logger.info("isAllowPlaceOrderOrNot|稍后再试|{}", activityId);
             return false;
         }
