@@ -99,7 +99,7 @@ public class FlashActivityCacheService {
             logger.error("activityCache|远程缓存更新失败|{}", activityId);
             return new FlashActivityCache().tryLater();
         } finally {
-            lock.forceUnlock();
+            lock.unlock();
         }
     }
 

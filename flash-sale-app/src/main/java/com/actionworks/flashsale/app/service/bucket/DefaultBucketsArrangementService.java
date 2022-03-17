@@ -90,7 +90,7 @@ public class DefaultBucketsArrangementService implements BucketsArrangementServi
             logger.error("arrangeBuckets|库存分桶错误|", e);
             throw new StockBucketException("库存分桶错误");
         } finally {
-            lock.forceUnlock();
+            lock.unlock();
             boolean success = bucketsDomainService.resumeBuckets(itemId);
             if (!success) {
                 logger.error("arrangeBuckets|打开库存分桶失败|");

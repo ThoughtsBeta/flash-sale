@@ -93,7 +93,7 @@ public class QueuedPlaceOrderService implements PlaceOrderService {
         PlaceOrderTask placeOrderTask = PlaceOrderTaskBuilder.with(userId, placeOrderCommand);
         placeOrderTask.setPlaceOrderTaskId(placeOrderTaskId);
         OrderTaskSubmitResult submitResult = placeOrderTaskService.submit(placeOrderTask);
-        logger.info("placeOrder|任务提交结果|{},{}", userId, placeOrderTaskId, JSON.toJSONString(placeOrderTask));
+        logger.info("placeOrder|任务提交结果|{},{},{}", userId, placeOrderTaskId, JSON.toJSONString(placeOrderTask));
 
         if (!submitResult.isSuccess()) {
             logger.info("placeOrder|下单任务提交失败|{},{}", userId, placeOrderCommand.getActivityId());
@@ -109,13 +109,13 @@ public class QueuedPlaceOrderService implements PlaceOrderService {
             Long userId = placeOrderTask.getUserId();
             boolean isActivityAllowPlaceOrder = flashActivityAppService.isAllowPlaceOrderOrNot(placeOrderTask.getActivityId());
             if (!isActivityAllowPlaceOrder) {
-                logger.info("handleOrderTask|秒杀活动下单规则校验未通过|{}", placeOrderTask.getPlaceOrderTaskId(), placeOrderTask.getActivityId());
+                logger.info("handleOrderTask|秒杀活动下单规则校验未通过|{},{}", placeOrderTask.getPlaceOrderTaskId(), placeOrderTask.getActivityId());
                 placeOrderTaskService.updateTaskHandleResult(placeOrderTask.getPlaceOrderTaskId(), false);
                 return;
             }
             boolean isItemAllowPlaceOrder = flashItemAppService.isAllowPlaceOrderOrNot(placeOrderTask.getItemId());
             if (!isItemAllowPlaceOrder) {
-                logger.info("handleOrderTask|秒杀品下单规则校验未通过|{}", placeOrderTask.getPlaceOrderTaskId(), placeOrderTask.getActivityId());
+                logger.info("handleOrderTask|秒杀品下单规则校验未通过|{},{}", placeOrderTask.getPlaceOrderTaskId(), placeOrderTask.getActivityId());
                 placeOrderTaskService.updateTaskHandleResult(placeOrderTask.getPlaceOrderTaskId(), false);
                 return;
             }
