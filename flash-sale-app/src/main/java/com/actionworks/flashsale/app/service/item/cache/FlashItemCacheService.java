@@ -98,7 +98,7 @@ public class FlashItemCacheService {
             logger.error("itemCache|远程缓存更新失败|{}", itemId);
             return new FlashItemCache().tryLater();
         } finally {
-            lock.forceUnlock();
+            lock.unlock();
         }
     }
 

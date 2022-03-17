@@ -107,7 +107,7 @@ public class FlashActivitiesCacheService {
             logger.error("activitiesCache|远程缓存更新失败", e);
             return new FlashActivitiesCache().tryLater();
         } finally {
-            lock.forceUnlock();
+            lock.unlock();
         }
     }
 
