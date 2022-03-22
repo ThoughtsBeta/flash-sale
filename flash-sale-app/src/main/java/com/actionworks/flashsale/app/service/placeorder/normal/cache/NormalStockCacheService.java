@@ -8,8 +8,6 @@ import com.actionworks.flashsale.cache.redis.RedisCacheService;
 import com.actionworks.flashsale.domain.model.StockDeduction;
 import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
-import com.actionworks.flashsale.lock.DistributedLock;
-import com.actionworks.flashsale.lock.DistributedLockFactoryService;
 import com.alibaba.fastjson.JSON;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -83,8 +81,6 @@ public class NormalStockCacheService implements ItemStockCacheService {
     @Resource
     private FlashItemDomainService flashItemDomainService;
     @Resource
-    private DistributedLockFactoryService distributedLockFactoryService;
-    @Resource
     private DistributedCacheService distributedCacheService;
 
     @Override
@@ -93,13 +89,7 @@ public class NormalStockCacheService implements ItemStockCacheService {
             logger.info("alignItemStocks|参数为空");
             return false;
         }
-        DistributedLock lock = distributedLockFactoryService.getDistributedLock(getItemStocksCacheAlignKey(itemId));
         try {
-            boolean isLockSuccess = lock.tryLock(5, 5, TimeUnit.SECONDS);
-            if (!isLockSuccess) {
-                logger.info("alignItemStocks|校准库存时获取锁失败|{}", itemId);
-                return false;
-            }
             FlashItem flashItem = flashItemDomainService.getFlashItem(itemId);
             if (flashItem == null) {
                 logger.info("alignItemStocks|秒杀品不存在|{}", itemId);
@@ -110,7 +100,6 @@ public class NormalStockCacheService implements ItemStockCacheService {
                 return false;
             }
             String key1ItemStocksCacheKey = getItemStocksCacheKey(itemId);
-
             String key2ItemStocksAlignKey = getItemStocksCacheAlignKey(itemId);
             List<String> keys = Lists.newArrayList(key1ItemStocksCacheKey, key2ItemStocksAlignKey);
 
