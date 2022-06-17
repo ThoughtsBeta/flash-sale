@@ -26,6 +26,7 @@ import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -134,6 +135,9 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
             PageResult<FlashItem> flashItemPageResult = flashItemDomainService.getFlashItems(toFlashItemsQuery(flashItemsQuery));
             items = flashItemPageResult.getData();
             total = flashItemPageResult.getTotal();
+        }
+        if(CollectionUtils.isEmpty(items)) {
+            return AppMultiResult.empty();
         }
 
         List<FlashItemDTO> flashItemDTOList = items.stream().map(FlashItemAppBuilder::toFlashItemDTO).collect(Collectors.toList());
