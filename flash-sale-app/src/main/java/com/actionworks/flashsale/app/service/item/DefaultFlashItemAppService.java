@@ -28,6 +28,7 @@ import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -162,22 +163,28 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
             return AppMultiResult.empty();
         }
         flashItemsQuery.setActivityId(activityId);
-        List<FlashItem> activities;
+        List<FlashItem> items;
         Integer total;
         if (flashItemsQuery.isOnlineFirstPageQuery()) {
             FlashItemsCache flashItemsCache = flashItemsCacheService.getCachedItems(activityId, flashItemsQuery.getVersion());
             if (flashItemsCache.isLater()) {
                 return AppMultiResult.tryLater();
             }
-            activities = flashItemsCache.getFlashItems();
+            if(flashItemsCache.isEmpty()){
+                return AppMultiResult.empty();
+            }
+            items = flashItemsCache.getFlashItems();
             total = flashItemsCache.getTotal();
         } else {
             PageResult<FlashItem> flashItemPageResult = flashItemDomainService.getFlashItems(toFlashItemsQuery(flashItemsQuery));
-            activities = flashItemPageResult.getData();
+            items = flashItemPageResult.getData();
             total = flashItemPageResult.getTotal();
         }
+        if(CollectionUtils.isEmpty(items)) {
+            return AppMultiResult.empty();
+        }
 
-        List<FlashItemDTO> flashItemDTOList = activities.stream().map(FlashItemAppBuilder::toFlashItemDTO).collect(Collectors.toList());
+        List<FlashItemDTO> flashItemDTOList = items.stream().map(FlashItemAppBuilder::toFlashItemDTO).collect(Collectors.toList());
         return AppMultiResult.of(flashItemDTOList, total);
     }
 
@@ -202,7 +209,7 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
     public AppSimpleResult<FlashItemDTO> getFlashItem(Long itemId) {
         FlashItemCache flashItemCache = flashItemCacheService.getCachedItem(itemId, null);
         if (!flashItemCache.isExist()) {
-            throw new BizException(ACTIVITY_NOT_FOUND.getErrDesc());
+            throw new BizException(ITEM_NOT_FOUND.getErrDesc());
         }
         if (flashItemCache.isLater()) {
             return AppSimpleResult.tryLater();
