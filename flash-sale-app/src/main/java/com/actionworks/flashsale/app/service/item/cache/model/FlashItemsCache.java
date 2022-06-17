@@ -10,6 +10,7 @@ import java.util.List;
 @Accessors(chain = true)
 public class FlashItemsCache {
     protected boolean exist;
+    protected boolean empty;
     private List<FlashItem> flashItems;
     private Long version;
     private boolean later;
@@ -34,6 +35,12 @@ public class FlashItemsCache {
 
     public FlashItemsCache notExist() {
         this.exist = false;
+        return this;
+    }
+    public FlashItemsCache empty() {
+        this.empty = true;
+        this.flashItems = new ArrayList<>();
+        this.total = 0;
         return this;
     }
 }

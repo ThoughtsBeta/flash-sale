@@ -93,7 +93,7 @@ public class FlashItemsCacheService {
             PageResult<FlashItem> flashItemPageResult = flashItemDomainService.getFlashItems(pagesQueryCondition);
             FlashItemsCache flashItemsCache;
             if (flashItemPageResult == null) {
-                flashItemsCache = new FlashItemsCache().notExist();
+                flashItemsCache = new FlashItemsCache().empty();
             } else {
                 flashItemsCache = new FlashItemsCache()
                         .setTotal(flashItemPageResult.getTotal())
