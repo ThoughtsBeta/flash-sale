@@ -22,23 +22,30 @@ import com.actionworks.flashsale.domain.model.entity.FlashActivity;
 import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
+import com.actionworks.flashsale.lock.DistributedLock;
+import com.actionworks.flashsale.lock.DistributedLockFactoryService;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.actionworks.flashsale.app.auth.model.ResourceEnum.FLASH_ITEM_CREATE;
-import static com.actionworks.flashsale.app.auth.model.ResourceEnum.FLASH_ITEM_OFFLINE;
+import static com.actionworks.flashsale.app.auth.model.ResourceEnum.FLASH_ITEM_MODIFICATION;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ACTIVITY_NOT_FOUND;
+import static com.actionworks.flashsale.app.exception.AppErrorCode.FREQUENTLY_ERROR;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.INVALID_PARAMS;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ITEM_NOT_FOUND;
+import static com.actionworks.flashsale.app.exception.AppErrorCode.LOCK_FAILED_ERROR;
 import static com.actionworks.flashsale.app.model.builder.FlashItemAppBuilder.toDomain;
 import static com.actionworks.flashsale.app.model.builder.FlashItemAppBuilder.toFlashItemsQuery;
 import static com.actionworks.flashsale.controller.exception.ErrorCode.UNAUTHORIZED_ACCESS;
+import static com.actionworks.flashsale.util.StringUtil.link;
 
 @Service
 public class DefaultFlashItemAppService implements FlashItemAppService {
@@ -59,57 +66,95 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
     private FlashItemsCacheService flashItemsCacheService;
     @Resource
     private ItemStockCacheService itemStockCacheService;
+    @Resource
+    private DistributedLockFactoryService lockFactoryService;
 
     @Override
     public AppResult publishFlashItem(Long userId, Long activityId, FlashItemPublishCommand itemPublishCommand) {
         logger.info("itemPublish|发布秒杀品|{},{},{}", userId, activityId, JSON.toJSON(itemPublishCommand));
+        if (userId == null || activityId == null || itemPublishCommand == null || !itemPublishCommand.validate()) {
+            throw new BizException(INVALID_PARAMS);
+        }
         AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_CREATE);
         if (!authResult.isSuccess()) {
             throw new AuthException(UNAUTHORIZED_ACCESS);
         }
-        if (userId == null || activityId == null || itemPublishCommand == null || !itemPublishCommand.validate()) {
-            throw new BizException(INVALID_PARAMS);
+        DistributedLock itemCreateLock = lockFactoryService.getDistributedLock(getItemCreateLockKey(userId));
+        try {
+            boolean isLockSuccess = itemCreateLock.tryLock(500, 1000, TimeUnit.MILLISECONDS);
+            if (!isLockSuccess) {
+                throw new BizException(FREQUENTLY_ERROR);
+            }
+            FlashActivity flashActivity = flashActivityDomainService.getFlashActivity(activityId);
+            if (flashActivity == null) {
+                throw new BizException(ACTIVITY_NOT_FOUND);
+            }
+            FlashItem flashItem = toDomain(itemPublishCommand);
+            flashItem.setActivityId(activityId);
+            flashItem.setStockWarmUp(0);
+            flashItemDomainService.publishFlashItem(flashItem);
+            logger.info("itemPublish|秒杀品已发布");
+            return AppResult.buildSuccess();
+        } catch (Exception e) {
+            logger.error("itemPublish|秒杀品发布失败|{}", userId, e);
+            throw new BizException("秒杀品发布失败");
+        } finally {
+            itemCreateLock.unlock();
         }
-        FlashActivity flashActivity = flashActivityDomainService.getFlashActivity(activityId);
-        if (flashActivity == null) {
-            throw new BizException(ACTIVITY_NOT_FOUND);
-        }
-        FlashItem flashItem = toDomain(itemPublishCommand);
-        flashItem.setActivityId(activityId);
-        flashItem.setStockWarmUp(0);
-        flashItemDomainService.publishFlashItem(flashItem);
-        logger.info("itemPublish|秒杀品已发布");
-        return AppResult.buildSuccess();
     }
 
     @Override
     public AppResult onlineFlashItem(Long userId, Long activityId, Long itemId) {
         logger.info("itemOnline|上线秒杀品|{},{},{}", userId, activityId, itemId);
-        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_OFFLINE);
-        if (!authResult.isSuccess()) {
-            throw new AuthException(UNAUTHORIZED_ACCESS);
-        }
         if (userId == null || activityId == null || itemId == null) {
             throw new BizException(INVALID_PARAMS);
         }
-        flashItemDomainService.onlineFlashItem(itemId);
-        logger.info("itemOnline|秒杀品已上线");
-        return AppResult.buildSuccess();
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_MODIFICATION);
+        if (!authResult.isSuccess()) {
+            throw new AuthException(UNAUTHORIZED_ACCESS);
+        }
+        DistributedLock itemModificationLock = lockFactoryService.getDistributedLock(getItemModificationLockKey(userId));
+        try {
+            boolean isLockSuccess = itemModificationLock.tryLock(500, 1000, TimeUnit.MILLISECONDS);
+            if (!isLockSuccess) {
+                throw new BizException(LOCK_FAILED_ERROR);
+            }
+            flashItemDomainService.onlineFlashItem(itemId);
+            logger.info("itemOnline|秒杀品已上线");
+            return AppResult.buildSuccess();
+        } catch (Exception e) {
+            logger.error("itemOnline|秒杀品已上线失败|{}", userId, e);
+            throw new BizException("秒杀品已上线失败");
+        } finally {
+            itemModificationLock.unlock();
+        }
     }
 
     @Override
     public AppResult offlineFlashItem(Long userId, Long activityId, Long itemId) {
         logger.info("itemOffline|下线秒杀品|{},{},{}", userId, activityId, itemId);
-        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_OFFLINE);
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_MODIFICATION);
         if (!authResult.isSuccess()) {
             throw new AuthException(UNAUTHORIZED_ACCESS);
         }
         if (userId == null || activityId == null || itemId == null) {
             throw new BizException(INVALID_PARAMS);
         }
-        flashItemDomainService.offlineFlashItem(itemId);
-        logger.info("itemOffline|秒杀品已下线");
-        return AppResult.buildSuccess();
+        DistributedLock itemModificationLock = lockFactoryService.getDistributedLock(getItemModificationLockKey(userId));
+        try {
+            boolean isLockSuccess = itemModificationLock.tryLock(500, 1000, TimeUnit.MILLISECONDS);
+            if (!isLockSuccess) {
+                throw new BizException(LOCK_FAILED_ERROR);
+            }
+            flashItemDomainService.offlineFlashItem(itemId);
+            logger.info("itemOffline|秒杀品已下线");
+            return AppResult.buildSuccess();
+        } catch (Exception e) {
+            logger.error("itemOffline|秒杀品已下线失败|{}", userId, e);
+            throw new BizException("秒杀品已下线失败");
+        } finally {
+            itemModificationLock.unlock();
+        }
     }
 
     @Override
@@ -118,29 +163,35 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
             return AppMultiResult.empty();
         }
         flashItemsQuery.setActivityId(activityId);
-        List<FlashItem> activities;
+        List<FlashItem> items;
         Integer total;
         if (flashItemsQuery.isOnlineFirstPageQuery()) {
             FlashItemsCache flashItemsCache = flashItemsCacheService.getCachedItems(activityId, flashItemsQuery.getVersion());
             if (flashItemsCache.isLater()) {
                 return AppMultiResult.tryLater();
             }
-            activities = flashItemsCache.getFlashItems();
+            if(flashItemsCache.isEmpty()){
+                return AppMultiResult.empty();
+            }
+            items = flashItemsCache.getFlashItems();
             total = flashItemsCache.getTotal();
         } else {
             PageResult<FlashItem> flashItemPageResult = flashItemDomainService.getFlashItems(toFlashItemsQuery(flashItemsQuery));
-            activities = flashItemPageResult.getData();
+            items = flashItemPageResult.getData();
             total = flashItemPageResult.getTotal();
         }
+        if(CollectionUtils.isEmpty(items)) {
+            return AppMultiResult.empty();
+        }
 
-        List<FlashItemDTO> flashItemDTOList = activities.stream().map(FlashItemAppBuilder::toFlashItemDTO).collect(Collectors.toList());
+        List<FlashItemDTO> flashItemDTOList = items.stream().map(FlashItemAppBuilder::toFlashItemDTO).collect(Collectors.toList());
         return AppMultiResult.of(flashItemDTOList, total);
     }
 
 
     @Override
     public AppSimpleResult<FlashItemDTO> getFlashItem(Long userId, Long activityId, Long itemId, Long version) {
-        logger.info("itemGet|读取秒杀品|{},{},{}", userId, activityId, itemId, version);
+        logger.info("itemGet|读取秒杀品|{},{},{},{}", userId, activityId, itemId, version);
         FlashItemCache flashItemCache = flashItemCacheService.getCachedItem(itemId, version);
         if (!flashItemCache.isExist()) {
             throw new BizException(ITEM_NOT_FOUND.getErrDesc());
@@ -158,7 +209,7 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
     public AppSimpleResult<FlashItemDTO> getFlashItem(Long itemId) {
         FlashItemCache flashItemCache = flashItemCacheService.getCachedItem(itemId, null);
         if (!flashItemCache.isExist()) {
-            throw new BizException(ACTIVITY_NOT_FOUND.getErrDesc());
+            throw new BizException(ITEM_NOT_FOUND.getErrDesc());
         }
         if (flashItemCache.isLater()) {
             return AppSimpleResult.tryLater();
@@ -201,5 +252,13 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
         if (itemStockCache != null && itemStockCache.isSuccess() && itemStockCache.getAvailableStock() != null) {
             flashItem.setAvailableStock(itemStockCache.getAvailableStock());
         }
+    }
+
+    private String getItemCreateLockKey(Long userId) {
+        return link("ITEM_CREATE_LOCK_KEY", userId);
+    }
+
+    private String getItemModificationLockKey(Long itemId) {
+        return link("ITEM_MODIFICATION_LOCK_KEY", itemId);
     }
 }

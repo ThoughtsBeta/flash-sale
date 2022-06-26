@@ -2,7 +2,6 @@ package com.actionworks.flashsale.lock.redisson;
 
 import com.actionworks.flashsale.lock.DistributedLock;
 import com.actionworks.flashsale.lock.DistributedLockFactoryService;
-
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
@@ -25,10 +24,6 @@ public class RedissonLockService implements DistributedLockFactoryService {
         RLock rLock = redissonClient.getLock(key);
 
         return new DistributedLock() {
-            @Override
-            public void lockInterruptibly(long leaseTime, TimeUnit unit) throws InterruptedException {
-                rLock.lockInterruptibly(leaseTime, unit);
-            }
 
             @Override
             public boolean tryLock(long waitTime, long leaseTime, TimeUnit unit) throws InterruptedException {
@@ -43,10 +38,10 @@ public class RedissonLockService implements DistributedLockFactoryService {
             }
 
             @Override
-            public boolean forceUnlock() {
-                boolean isForceUnLockSuccess = rLock.forceUnlock();
-                logger.info("Force unlock result:{},{}", isForceUnLockSuccess, key);
-                return isForceUnLockSuccess;
+            public void unlock() {
+                if (isLocked() && isHeldByCurrentThread()) {
+                    rLock.unlock();
+                }
             }
 
             @Override
@@ -62,16 +57,6 @@ public class RedissonLockService implements DistributedLockFactoryService {
             @Override
             public boolean isHeldByCurrentThread() {
                 return rLock.isHeldByCurrentThread();
-            }
-
-            @Override
-            public int getHoldCount() {
-                return rLock.getHoldCount();
-            }
-
-            @Override
-            public long remainTimeToLive() {
-                return rLock.remainTimeToLive();
             }
         };
     }

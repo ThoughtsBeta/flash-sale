@@ -29,7 +29,6 @@ build/
 
 ### VS Code ###
 .vscode/
-.devcontainer
 /environment/data/db_data/**
 /environment/data/nacos_logs/**
 /environment/data/portainer_data/**

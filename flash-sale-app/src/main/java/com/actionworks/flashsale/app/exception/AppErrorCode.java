@@ -10,6 +10,7 @@ public enum AppErrorCode implements ErrorCodeI {
     INVALID_PARAMS("INVALID_PARAMS", "参数错误"),
     TRY_LATER("TRY_LATER", "稍后再试"),
     FREQUENTLY_ERROR("FREQUENTLY_ERROR", "操作频繁，稍后再试"),
+    LOCK_FAILED_ERROR("LOCK_FAILED_ERROR", "变更中，稍后再试"),
     BUSINESS_ERROR("BUSINESS_ERROR", "未知错误"),
 
     /**
