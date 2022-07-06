@@ -193,11 +193,11 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
     public AppSimpleResult<FlashItemDTO> getFlashItem(Long userId, Long activityId, Long itemId, Long version) {
         logger.info("itemGet|读取秒杀品|{},{},{},{}", userId, activityId, itemId, version);
         FlashItemCache flashItemCache = flashItemCacheService.getCachedItem(itemId, version);
-        if (!flashItemCache.isExist()) {
-            throw new BizException(ITEM_NOT_FOUND.getErrDesc());
-        }
         if (flashItemCache.isLater()) {
             return AppSimpleResult.tryLater();
+        }
+        if (!flashItemCache.isExist()) {
+            throw new BizException(ITEM_NOT_FOUND.getErrDesc());
         }
         updateLatestItemStock(userId, flashItemCache.getFlashItem());
         FlashItemDTO flashItemDTO = FlashItemAppBuilder.toFlashItemDTO(flashItemCache.getFlashItem());
