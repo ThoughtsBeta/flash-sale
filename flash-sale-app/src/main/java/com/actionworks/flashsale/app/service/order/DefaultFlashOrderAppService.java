@@ -1,6 +1,5 @@
 package com.actionworks.flashsale.app.service.order;
 
-import com.actionworks.flashsale.app.auth.AuthorizationService;
 import com.actionworks.flashsale.app.exception.BizException;
 import com.actionworks.flashsale.app.model.builder.FlashOrderAppBuilder;
 import com.actionworks.flashsale.app.model.command.FlashPlaceOrderCommand;
@@ -53,8 +52,6 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
     @Resource
     private StockDeductionDomainService stockDeductionDomainService;
     @Resource
-    private AuthorizationService authorizationService;
-    @Resource
     private ItemStockCacheService itemStockCacheService;
     @Resource
     private DistributedLockFactoryService lockFactoryService;
@@ -92,7 +89,7 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
             logger.error("placeOrder|下单失败|{},{}", userId, JSON.toJSONString(placeOrderCommand), e);
             return AppSimpleResult.failed(PLACE_ORDER_FAILED);
         } finally {
-            placeOrderLock.forceUnlock();
+            placeOrderLock.unlock();
         }
     }
 

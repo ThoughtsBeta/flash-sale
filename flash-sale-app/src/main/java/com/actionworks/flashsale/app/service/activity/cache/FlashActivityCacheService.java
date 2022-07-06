@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.actionworks.flashsale.app.model.constants.CacheConstants.ACTIVITY_CACHE_KEY;
 import static com.actionworks.flashsale.app.model.constants.CacheConstants.FIVE_MINUTES;
@@ -25,6 +27,7 @@ public class FlashActivityCacheService {
     private final static Logger logger = LoggerFactory.getLogger(FlashActivityCacheService.class);
     private final static Cache<Long, FlashActivityCache> flashActivityLocalCache = CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(5).expireAfterWrite(10, TimeUnit.SECONDS).build();
     private static final String UPDATE_ACTIVITY_CACHE_LOCK_KEY = "UPDATE_ACTIVITY_CACHE_LOCK_KEY_";
+    private final Lock localCacleUpdatelock = new ReentrantLock();
 
     @Resource
     private DistributedCacheService distributedCacheService;
@@ -56,11 +59,22 @@ public class FlashActivityCacheService {
 
     private FlashActivityCache getLatestDistributedCache(Long activityId) {
         logger.info("activityCache|读取远程缓存|{}", activityId);
-        FlashActivityCache distributedCachedFlashActivity = distributedCacheService.getObject(buildActivityCacheKey(activityId), FlashActivityCache.class);
-        if (distributedCachedFlashActivity == null) {
-            return tryToUpdateActivityCacheByLock(activityId);
+        FlashActivityCache distributedFlashActivityCache = distributedCacheService.getObject(buildActivityCacheKey(activityId), FlashActivityCache.class);
+        if (distributedFlashActivityCache == null) {
+            distributedFlashActivityCache = tryToUpdateActivityCacheByLock(activityId);
         }
-        return distributedCachedFlashActivity;
+        if (distributedFlashActivityCache != null && !distributedFlashActivityCache.isLater()) {
+            boolean isLockSuccess = localCacleUpdatelock.tryLock();
+            if (isLockSuccess) {
+                try {
+                    flashActivityLocalCache.put(activityId, distributedFlashActivityCache);
+                    logger.info("activityCache|本地缓存已更新|{}", activityId);
+                } finally {
+                    localCacleUpdatelock.unlock();
+                }
+            }
+        }
+        return distributedFlashActivityCache;
     }
 
     public FlashActivityCache tryToUpdateActivityCacheByLock(Long activityId) {
@@ -72,21 +86,20 @@ public class FlashActivityCacheService {
                 return new FlashActivityCache().tryLater();
             }
             FlashActivity flashActivity = flashActivityDomainService.getFlashActivity(activityId);
+            FlashActivityCache flashActivityCache;
             if (flashActivity == null) {
-                return new FlashActivityCache().notExist();
+                flashActivityCache = new FlashActivityCache().notExist();
+            } else {
+                flashActivityCache = new FlashActivityCache().with(flashActivity).withVersion(System.currentTimeMillis());
             }
-            FlashActivityCache flashActivityCache = new FlashActivityCache().with(flashActivity).withVersion(System.currentTimeMillis());
             distributedCacheService.put(buildActivityCacheKey(activityId), JSON.toJSONString(flashActivityCache), FIVE_MINUTES);
             logger.info("activityCache|远程缓存已更新|{}", activityId);
-
-            flashActivityLocalCache.put(activityId, flashActivityCache);
-            logger.info("activityCache|本地缓存已更新|{}", activityId);
             return flashActivityCache;
         } catch (InterruptedException e) {
             logger.error("activityCache|远程缓存更新失败|{}", activityId);
             return new FlashActivityCache().tryLater();
         } finally {
-            lock.forceUnlock();
+            lock.unlock();
         }
     }
 

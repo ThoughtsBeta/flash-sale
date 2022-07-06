@@ -1,17 +1,14 @@
 package com.actionworks.flashsale.app.service.bucket;
 
-import com.actionworks.flashsale.app.auth.AuthorizationService;
-import com.actionworks.flashsale.app.auth.model.AuthResult;
 import com.actionworks.flashsale.app.exception.AppException;
+import com.actionworks.flashsale.app.exception.BizException;
 import com.actionworks.flashsale.app.model.command.BucketsArrangementCommand;
 import com.actionworks.flashsale.app.model.dto.StockBucketSummaryDTO;
 import com.actionworks.flashsale.app.model.result.AppSimpleResult;
-import com.actionworks.flashsale.controller.exception.AuthException;
 import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
 import com.actionworks.flashsale.lock.DistributedLock;
 import com.actionworks.flashsale.lock.DistributedLockFactoryService;
-import com.actionworks.flashsale.app.exception.BizException;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,14 +18,11 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
 
-import static com.actionworks.flashsale.app.auth.model.ResourceEnum.STOCK_BUCKETS_ARRANGEMENT;
-import static com.actionworks.flashsale.app.auth.model.ResourceEnum.STOCK_BUCKETS_SUMMERY_QUERY;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ARRANGE_STOCK_BUCKETS_FAILED;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.BUSINESS_ERROR;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.FREQUENTLY_ERROR;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ITEM_NOT_FOUND;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.QUERY_STOCK_BUCKETS_FAILED;
-import static com.actionworks.flashsale.controller.exception.ErrorCode.INVALID_TOKEN;
 import static com.actionworks.flashsale.util.StringUtil.link;
 
 @Service
@@ -39,9 +33,6 @@ public class DefaultBucketsAPPService implements BucketsAPPService {
 
     @Resource
     private FlashItemDomainService flashItemDomainService;
-
-    @Resource
-    private AuthorizationService authorizationService;
 
     @Resource
     private DistributedLockFactoryService lockFactoryService;
@@ -75,7 +66,7 @@ public class DefaultBucketsAPPService implements BucketsAPPService {
             logger.error("arrangeBuckets|库存编排错误|{}", itemId, e);
             return AppSimpleResult.failed(ARRANGE_STOCK_BUCKETS_FAILED);
         } finally {
-            arrangementLock.forceUnlock();
+            arrangementLock.unlock();
         }
     }
 

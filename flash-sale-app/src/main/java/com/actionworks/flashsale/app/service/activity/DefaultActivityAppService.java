@@ -18,6 +18,8 @@ import com.actionworks.flashsale.controller.exception.AuthException;
 import com.actionworks.flashsale.domain.model.PageResult;
 import com.actionworks.flashsale.domain.model.entity.FlashActivity;
 import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
+import com.actionworks.flashsale.lock.DistributedLock;
+import com.actionworks.flashsale.lock.DistributedLockFactoryService;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,18 +27,24 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.actionworks.flashsale.app.auth.model.ResourceEnum.FLASH_ITEM_CREATE;
+import static com.actionworks.flashsale.app.auth.model.ResourceEnum.FLASH_ACTIVITY_CREATE;
+import static com.actionworks.flashsale.app.auth.model.ResourceEnum.FLASH_ACTIVITY_MODIFICATION;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.ACTIVITY_NOT_FOUND;
+import static com.actionworks.flashsale.app.exception.AppErrorCode.FREQUENTLY_ERROR;
 import static com.actionworks.flashsale.app.exception.AppErrorCode.INVALID_PARAMS;
 import static com.actionworks.flashsale.app.model.builder.FlashActivityAppBuilder.toDomain;
 import static com.actionworks.flashsale.app.model.builder.FlashActivityAppBuilder.toFlashActivitiesQuery;
 import static com.actionworks.flashsale.controller.exception.ErrorCode.UNAUTHORIZED_ACCESS;
+import static com.actionworks.flashsale.util.StringUtil.link;
 
 @Service
 public class DefaultActivityAppService implements FlashActivityAppService {
     private static final Logger logger = LoggerFactory.getLogger(DefaultActivityAppService.class);
+    public static final String ACTIVITY_CREATE_LOCK = "ACTIVITY_LOCK";
+    public static final String ACTIVITY_MODIFICATION_LOCK = "ACTIVITY_MODIFICATION_LOCK";
 
     @Resource
     private FlashActivityDomainService flashActivityDomainService;
@@ -48,6 +56,8 @@ public class DefaultActivityAppService implements FlashActivityAppService {
     private FlashActivityCacheService flashActivityCacheService;
     @Resource
     private FlashActivitiesCacheService flashActivitiesCacheService;
+    @Resource
+    private DistributedLockFactoryService lockFactoryService;
 
     @Override
     public AppResult publishFlashActivity(Long userId, FlashActivityPublishCommand flashActivityPublishCommand) {
@@ -55,13 +65,26 @@ public class DefaultActivityAppService implements FlashActivityAppService {
         if (userId == null || flashActivityPublishCommand == null || !flashActivityPublishCommand.validate()) {
             throw new BizException(INVALID_PARAMS);
         }
-        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_CREATE);
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ACTIVITY_CREATE);
         if (!authResult.isSuccess()) {
             throw new AuthException(UNAUTHORIZED_ACCESS);
         }
-        flashActivityDomainService.publishActivity(userId, toDomain(flashActivityPublishCommand));
-        logger.info("activityPublish|活动已发布");
-        return AppResult.buildSuccess();
+        DistributedLock activityCreateLock = lockFactoryService.getDistributedLock(getActivityCreateLockKey(userId));
+        try {
+            boolean isLockSuccess = activityCreateLock.tryLock(500, 1000, TimeUnit.MILLISECONDS);
+            if (!isLockSuccess) {
+                throw new BizException(FREQUENTLY_ERROR);
+            }
+
+            flashActivityDomainService.publishActivity(userId, toDomain(flashActivityPublishCommand));
+            logger.info("activityPublish|活动已发布");
+            return AppResult.buildSuccess();
+        } catch (Exception e) {
+            logger.error("activityPublish|活动发布失败|{}", userId, e);
+            throw new BizException("活动发布失败");
+        } finally {
+            activityCreateLock.unlock();
+        }
     }
 
     @Override
@@ -70,15 +93,27 @@ public class DefaultActivityAppService implements FlashActivityAppService {
         if (userId == null || flashActivityPublishCommand == null || !flashActivityPublishCommand.validate()) {
             throw new BizException(INVALID_PARAMS);
         }
-        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_CREATE);
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ACTIVITY_MODIFICATION);
         if (!authResult.isSuccess()) {
             throw new AuthException(UNAUTHORIZED_ACCESS);
         }
-        FlashActivity flashActivity = toDomain(flashActivityPublishCommand);
-        flashActivity.setId(activityId);
-        flashActivityDomainService.modifyActivity(userId, flashActivity);
-        logger.info("activityModification|活动已修改");
-        return AppResult.buildSuccess();
+        DistributedLock activityModificationLock = lockFactoryService.getDistributedLock(getActivityModificationLockKey(activityId));
+        try {
+            boolean isLockSuccess = activityModificationLock.tryLock(500, 1000, TimeUnit.MILLISECONDS);
+            if (!isLockSuccess) {
+                throw new BizException(FREQUENTLY_ERROR);
+            }
+            FlashActivity flashActivity = toDomain(flashActivityPublishCommand);
+            flashActivity.setId(activityId);
+            flashActivityDomainService.modifyActivity(userId, flashActivity);
+            logger.info("activityModification|活动已修改");
+            return AppResult.buildSuccess();
+        } catch (Exception e) {
+            logger.error("activityModification|活动修改失败|{},{}", userId, activityId, e);
+            throw new BizException("活动修改失败");
+        } finally {
+            activityModificationLock.unlock();
+        }
     }
 
     @Override
@@ -87,13 +122,25 @@ public class DefaultActivityAppService implements FlashActivityAppService {
         if (userId == null || activityId == null) {
             throw new BizException(INVALID_PARAMS);
         }
-        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_CREATE);
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ACTIVITY_CREATE);
         if (!authResult.isSuccess()) {
             throw new AuthException(UNAUTHORIZED_ACCESS);
         }
-        flashActivityDomainService.onlineActivity(userId, activityId);
-        logger.info("activityOnline|活动已上线");
-        return AppResult.buildSuccess();
+        DistributedLock activityModificationLock = lockFactoryService.getDistributedLock(getActivityModificationLockKey(activityId));
+        try {
+            boolean isLockSuccess = activityModificationLock.tryLock(500, 1000, TimeUnit.MILLISECONDS);
+            if (!isLockSuccess) {
+                throw new BizException(FREQUENTLY_ERROR);
+            }
+            flashActivityDomainService.onlineActivity(userId, activityId);
+            logger.info("activityOnline|活动已上线");
+            return AppResult.buildSuccess();
+        } catch (Exception e) {
+            logger.error("activityModification|活动修改失败|{},{}", userId, activityId, e);
+            throw new BizException("活动修改失败");
+        } finally {
+            activityModificationLock.unlock();
+        }
     }
 
     @Override
@@ -102,13 +149,25 @@ public class DefaultActivityAppService implements FlashActivityAppService {
         if (userId == null || activityId == null) {
             throw new BizException(INVALID_PARAMS);
         }
-        AuthResult authResult = authorizationService.auth(userId, FLASH_ITEM_CREATE);
+        AuthResult authResult = authorizationService.auth(userId, FLASH_ACTIVITY_MODIFICATION);
         if (!authResult.isSuccess()) {
             throw new AuthException(UNAUTHORIZED_ACCESS);
         }
-        flashActivityDomainService.offlineActivity(userId, activityId);
-        logger.info("activityOffline|活动已下线");
-        return AppResult.buildSuccess();
+        DistributedLock activityModificationLock = lockFactoryService.getDistributedLock(getActivityModificationLockKey(activityId));
+        try {
+            boolean isLockSuccess = activityModificationLock.tryLock(500, 1000, TimeUnit.MILLISECONDS);
+            if (!isLockSuccess) {
+                throw new BizException(FREQUENTLY_ERROR);
+            }
+            flashActivityDomainService.offlineActivity(userId, activityId);
+            logger.info("activityOffline|活动已下线");
+            return AppResult.buildSuccess();
+        } catch (Exception e) {
+            logger.error("activityModification|活动修改失败|{},{}", userId, activityId, e);
+            throw new BizException("活动修改失败");
+        } finally {
+            activityModificationLock.unlock();
+        }
     }
 
     @Override
@@ -147,5 +206,37 @@ public class DefaultActivityAppService implements FlashActivityAppService {
         FlashActivityDTO flashActivityDTO = FlashActivityAppBuilder.toFlashActivityDTO(flashActivityCache.getFlashActivity());
         flashActivityDTO.setVersion(flashActivityCache.getVersion());
         return AppSimpleResult.ok(flashActivityDTO);
+    }
+
+    @Override
+    public boolean isAllowPlaceOrderOrNot(Long activityId) {
+        FlashActivityCache flashActivityCache = flashActivityCacheService.getCachedActivity(activityId, null);
+        if (flashActivityCache.isLater()) {
+            logger.info("isAllowPlaceOrderOrNot|稍后再试|{}", activityId);
+            return false;
+        }
+        if (!flashActivityCache.isExist() || flashActivityCache.getFlashActivity() == null) {
+            logger.info("isAllowPlaceOrderOrNot|活动不存在|{}", activityId);
+            return false;
+        }
+        FlashActivity flashActivity = flashActivityCache.getFlashActivity();
+        if (!flashActivity.isOnline()) {
+            logger.info("isAllowPlaceOrderOrNot|活动尚未上线|{}", activityId);
+            return false;
+        }
+        if (!flashActivity.isInProgress()) {
+            logger.info("isAllowPlaceOrderOrNot|活动非秒杀时段|{}", activityId);
+            return false;
+        }
+        // 可在此处丰富其他校验规则
+        return true;
+    }
+
+    private String getActivityCreateLockKey(Long userId) {
+        return link(ACTIVITY_CREATE_LOCK, userId);
+    }
+
+    private String getActivityModificationLockKey(Long activityId) {
+        return link(ACTIVITY_MODIFICATION_LOCK, activityId);
     }
 }

@@ -7,7 +7,7 @@ public class StringUtil {
         }
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < items.length; i++) {
-            stringBuilder.append(String.valueOf(items[i]));
+            stringBuilder.append(items[i]);
             if (i < items.length - 1) {
                 stringBuilder.append("_");
             }

@@ -6,7 +6,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class Rule {
-    private boolean enable = true;
+    private boolean enable = false;
     private String path;
     private int windowPeriod;
     private int windowSize;

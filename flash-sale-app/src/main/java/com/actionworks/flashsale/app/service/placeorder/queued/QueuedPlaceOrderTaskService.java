@@ -181,7 +181,7 @@ public class QueuedPlaceOrderTaskService implements PlaceOrderTaskService {
         } catch (Exception e) {
             logger.error("refreshAvailableTokens|刷新tokens失败|{}", itemId, e);
         } finally {
-            refreshTokenLock.forceUnlock();
+            refreshTokenLock.unlock();
         }
         return null;
     }

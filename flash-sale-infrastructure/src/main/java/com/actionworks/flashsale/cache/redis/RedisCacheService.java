@@ -56,7 +56,7 @@ public class RedisCacheService implements DistributedCacheService {
             return null;
         }
         try {
-            return JSON.parseObject(JSON.parse(JSON.toJSONString(result)).toString(), targetClass);
+            return JSON.parseObject((String) result, targetClass);
         } catch (Exception e) {
             return null;
         }

@@ -17,7 +17,10 @@ participant OrderAPPService
 participant OrderAPPService
 participant FlashOrderDomainService
 participant ItemStockCacheService
-participant FlashActivityDomainService
+
+participant FlashActivityAppService
+participant FlashItemAppService
+
 participant FlashItemDomainService
 
 participant AuthService
@@ -55,23 +58,24 @@ alt  风控校验未通过
     OrderAPPService --> Controller:返回应用层结果
     Controller --> User:返回结果给用户
 end
-activate FlashActivityDomainService
-OrderAPPService -> FlashActivityDomainService:根据活动配置校验是否允许下单
-FlashActivityDomainService --> OrderAPPService:返回校验结果
+activate FlashActivityAppService
+OrderAPPService -> FlashActivityAppService:根据活动配置校验是否允许下单
+FlashActivityAppService --> OrderAPPService:返回校验结果
 alt  活动下单校验未通过
     OrderAPPService --> Controller:返回应用层结果
     Controller --> User:返回结果给用户
 end
-activate FlashItemDomainService
-OrderAPPService -> FlashItemDomainService:根据秒杀品配置校验是否允许下单
-FlashItemDomainService --> OrderAPPService:返回校验结果
+deactivate FlashActivityAppService
+activate FlashItemAppService
+OrderAPPService -> FlashItemAppService:根据秒杀品配置校验是否允许下单
+FlashItemAppService --> OrderAPPService:返回校验结果
 alt  秒杀品下单校验未通过
     OrderAPPService --> Controller:返回应用层结果
     Controller --> User:返回结果给用户
 end
-OrderAPPService -> FlashItemDomainService:获取秒杀品及配置
-FlashItemDomainService --> OrderAPPService:返回秒杀品配置
-deactivate FlashItemDomainService
+OrderAPPService -> FlashItemAppService:获取秒杀品及配置
+FlashItemAppService --> OrderAPPService:返回秒杀品配置
+deactivate FlashItemAppService
 
 activate FlashOrderDomainService
 OrderAPPService -> FlashOrderDomainService:根据秒杀品活动配置校验是否允许下单

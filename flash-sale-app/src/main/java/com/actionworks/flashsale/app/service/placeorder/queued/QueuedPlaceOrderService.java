@@ -1,7 +1,6 @@
 package com.actionworks.flashsale.app.service.placeorder.queued;
 
-import com.actionworks.flashsale.app.service.item.FlashItemAppService;
-import com.actionworks.flashsale.app.service.placeorder.PlaceOrderService;
+import com.actionworks.flashsale.app.exception.BizException;
 import com.actionworks.flashsale.app.model.PlaceOrderTask;
 import com.actionworks.flashsale.app.model.builder.PlaceOrderTaskBuilder;
 import com.actionworks.flashsale.app.model.command.FlashPlaceOrderCommand;
@@ -11,6 +10,9 @@ import com.actionworks.flashsale.app.model.result.AppSimpleResult;
 import com.actionworks.flashsale.app.model.result.OrderTaskHandleResult;
 import com.actionworks.flashsale.app.model.result.OrderTaskSubmitResult;
 import com.actionworks.flashsale.app.model.result.PlaceOrderResult;
+import com.actionworks.flashsale.app.service.activity.FlashActivityAppService;
+import com.actionworks.flashsale.app.service.item.FlashItemAppService;
+import com.actionworks.flashsale.app.service.placeorder.PlaceOrderService;
 import com.actionworks.flashsale.app.util.OrderNoGenerateContext;
 import com.actionworks.flashsale.app.util.OrderNoGenerateService;
 import com.actionworks.flashsale.app.util.OrderTaskIdGenerateService;
@@ -18,11 +20,9 @@ import com.actionworks.flashsale.cache.redis.RedisCacheService;
 import com.actionworks.flashsale.domain.model.StockDeduction;
 import com.actionworks.flashsale.domain.model.entity.FlashItem;
 import com.actionworks.flashsale.domain.model.entity.FlashOrder;
-import com.actionworks.flashsale.domain.service.FlashActivityDomainService;
 import com.actionworks.flashsale.domain.service.FlashItemDomainService;
 import com.actionworks.flashsale.domain.service.FlashOrderDomainService;
 import com.actionworks.flashsale.domain.service.StockDeductionDomainService;
-import com.actionworks.flashsale.app.exception.BizException;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ public class QueuedPlaceOrderService implements PlaceOrderService {
     @Resource
     private FlashItemDomainService flashItemDomainService;
     @Resource
-    private FlashActivityDomainService flashActivityDomainService;
+    private FlashActivityAppService flashActivityAppService;
     @Resource
     private StockDeductionDomainService stockDeductionDomainService;
     @Resource
@@ -93,7 +93,7 @@ public class QueuedPlaceOrderService implements PlaceOrderService {
         PlaceOrderTask placeOrderTask = PlaceOrderTaskBuilder.with(userId, placeOrderCommand);
         placeOrderTask.setPlaceOrderTaskId(placeOrderTaskId);
         OrderTaskSubmitResult submitResult = placeOrderTaskService.submit(placeOrderTask);
-        logger.info("placeOrder|任务提交结果|{},{}", userId, placeOrderTaskId, JSON.toJSONString(placeOrderTask));
+        logger.info("placeOrder|任务提交结果|{},{},{}", userId, placeOrderTaskId, JSON.toJSONString(placeOrderTask));
 
         if (!submitResult.isSuccess()) {
             logger.info("placeOrder|下单任务提交失败|{},{}", userId, placeOrderCommand.getActivityId());
@@ -107,15 +107,15 @@ public class QueuedPlaceOrderService implements PlaceOrderService {
     public void handlePlaceOrderTask(PlaceOrderTask placeOrderTask) {
         try {
             Long userId = placeOrderTask.getUserId();
-            boolean isActivityAllowPlaceOrder = flashActivityDomainService.isAllowPlaceOrderOrNot(placeOrderTask.getActivityId());
+            boolean isActivityAllowPlaceOrder = flashActivityAppService.isAllowPlaceOrderOrNot(placeOrderTask.getActivityId());
             if (!isActivityAllowPlaceOrder) {
-                logger.info("handleOrderTask|秒杀活动下单规则校验未通过|{}", placeOrderTask.getPlaceOrderTaskId(), placeOrderTask.getActivityId());
+                logger.info("handleOrderTask|秒杀活动下单规则校验未通过|{},{}", placeOrderTask.getPlaceOrderTaskId(), placeOrderTask.getActivityId());
                 placeOrderTaskService.updateTaskHandleResult(placeOrderTask.getPlaceOrderTaskId(), false);
                 return;
             }
             boolean isItemAllowPlaceOrder = flashItemAppService.isAllowPlaceOrderOrNot(placeOrderTask.getItemId());
             if (!isItemAllowPlaceOrder) {
-                logger.info("handleOrderTask|秒杀品下单规则校验未通过|{}", placeOrderTask.getPlaceOrderTaskId(), placeOrderTask.getActivityId());
+                logger.info("handleOrderTask|秒杀品下单规则校验未通过|{},{}", placeOrderTask.getPlaceOrderTaskId(), placeOrderTask.getActivityId());
                 placeOrderTaskService.updateTaskHandleResult(placeOrderTask.getPlaceOrderTaskId(), false);
                 return;
             }

@@ -46,11 +46,4 @@ public interface FlashActivityDomainService {
      * @return 秒杀品
      */
     FlashActivity getFlashActivity(Long activityId);
-
-    /**
-     * 检查活动当前是否允许下单
-     *
-     * @param activityId 活动ID
-     */
-    boolean isAllowPlaceOrderOrNot(Long activityId);
 }

@@ -1,22 +1,15 @@
 package com.actionworks.flashsale.controller.security.rules.config;
 
-import com.actionworks.flashsale.config.YamlPropertySourceFactory;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.server.PathContainer;
-import org.springframework.stereotype.Component;
 import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
 
 @Data
 @Accessors(chain = true)
-@PropertySource(value = "classpath:security-rules.yml", factory = YamlPropertySourceFactory.class)
-@Component
-@ConfigurationProperties(prefix = "rules")
 public class SecurityRulesConfiguration {
     private boolean enable;
 
