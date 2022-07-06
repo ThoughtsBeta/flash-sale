@@ -84,6 +84,10 @@ public class FlashItemCacheService {
             if (!isLockSuccess) {
                 return new FlashItemCache().tryLater();
             }
+            FlashItemCache distributedFlashItemCache = distributedCacheService.getObject(buildItemCacheKey(itemId), FlashItemCache.class);
+            if (distributedFlashItemCache != null) {
+                return distributedFlashItemCache;
+            }
             FlashItem flashItem = flashItemDomainService.getFlashItem(itemId);
             FlashItemCache flashItemCache;
             if (flashItem == null) {
