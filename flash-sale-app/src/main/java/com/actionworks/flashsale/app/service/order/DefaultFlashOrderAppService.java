@@ -136,7 +136,8 @@ public class DefaultFlashOrderAppService implements FlashOrderAppService {
         }
         StockDeduction stockDeduction = new StockDeduction()
                 .setItemId(flashOrder.getItemId())
-                .setQuantity(flashOrder.getQuantity());
+                .setQuantity(flashOrder.getQuantity())
+                .setUserId(userId);
 
         boolean stockRecoverSuccess = stockDeductionDomainService.increaseItemStock(stockDeduction);
         if (!stockRecoverSuccess) {
