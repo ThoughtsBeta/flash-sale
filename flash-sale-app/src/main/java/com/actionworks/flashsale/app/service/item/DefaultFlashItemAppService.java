@@ -223,7 +223,7 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
     @Override
     public boolean isAllowPlaceOrderOrNot(Long itemId) {
         FlashItemCache flashItemCache = flashItemCacheService.getCachedItem(itemId, null);
-        if (!flashItemCache.isLater()) {
+        if (flashItemCache.isLater()) {
             logger.info("isAllowPlaceOrderOrNot|稍后再试|{}", itemId);
             return false;
         }
