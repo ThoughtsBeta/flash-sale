@@ -25,10 +25,10 @@ import com.actionworks.flashsale.domain.service.FlashItemDomainService;
 import com.actionworks.flashsale.lock.DistributedLock;
 import com.actionworks.flashsale.lock.DistributedLockFactoryService;
 import com.alibaba.fastjson.JSON;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -170,7 +170,7 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
             if (flashItemsCache.isLater()) {
                 return AppMultiResult.tryLater();
             }
-            if(flashItemsCache.isEmpty()){
+            if (flashItemsCache.isEmpty()) {
                 return AppMultiResult.empty();
             }
             items = flashItemsCache.getFlashItems();
@@ -180,7 +180,7 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
             items = flashItemPageResult.getData();
             total = flashItemPageResult.getTotal();
         }
-        if(CollectionUtils.isEmpty(items)) {
+        if (CollectionUtils.isEmpty(items)) {
             return AppMultiResult.empty();
         }
 
@@ -196,7 +196,7 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
         if (flashItemCache.isLater()) {
             return AppSimpleResult.tryLater();
         }
-        if (!flashItemCache.isExist()) {
+        if (!flashItemCache.isExist() || flashItemCache.getFlashItem() == null) {
             throw new BizException(ITEM_NOT_FOUND.getErrDesc());
         }
         updateLatestItemStock(userId, flashItemCache.getFlashItem());
@@ -208,11 +208,11 @@ public class DefaultFlashItemAppService implements FlashItemAppService {
     @Override
     public AppSimpleResult<FlashItemDTO> getFlashItem(Long itemId) {
         FlashItemCache flashItemCache = flashItemCacheService.getCachedItem(itemId, null);
-        if (!flashItemCache.isExist()) {
-            throw new BizException(ITEM_NOT_FOUND.getErrDesc());
-        }
         if (flashItemCache.isLater()) {
             return AppSimpleResult.tryLater();
+        }
+        if (!flashItemCache.isExist() || flashItemCache.getFlashItem() == null) {
+            throw new BizException(ITEM_NOT_FOUND.getErrDesc());
         }
         updateLatestItemStock(null, flashItemCache.getFlashItem());
         FlashItemDTO flashItemDTO = FlashItemAppBuilder.toFlashItemDTO(flashItemCache.getFlashItem());
